@@ -1,0 +1,8 @@
+# OS specific
+.DS_Store
+
+# Vagrant
+boxes/*
+/.vagrant
+*.log
+.vagrantuser
