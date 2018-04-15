@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_PATH" || exit 1
+
+if [ -z "$1" ]; then
+  echo "Usage: ${BASH_SOURCE[0]} [email-address]" >&2
+  exit 1
+fi
+
+if ! [ -f "$HOME/.ssh/id_rsa" ]; then
+  ssh-keygen -t rsa \
+    -f "$HOME/.ssh/id_rsa" \
+    -C "$1" \
+    -N "" \
+    -q || exit
+  echo "Created default ssh keypair" >&2
+fi
+
+if (( $(id -u) == 0 )); then
+  chown $SUDO_USER:$SUDO_USER $HOME/.ssh/id_rsa*
+  echo "Corrected default keypair fileownership" >&2
+fi
+
+# -rw-------
+chmod 600 "$HOME/.ssh/id_rsa" || exit
+# -rw-r--r--
+chmod 644 "$HOME/.ssh/id_rsa.pub" || exit
+echo "Permissions set on default keypair" >&2
+
+eval `ssh-agent -s`
+ssh-add "$HOME/.ssh/id_rsa" >/dev/null || exit
+ssh-add -l | grep "id_rsa" || exit
+echo "Default keypair added to ssh-agent" >&2
+
+if ! grep -q "Host github.com" "$HOME/.ssh/config"; then
+  cat >> "${HOME}/.ssh/config" <<EOF
+Host github.com
+  User git
+  Hostname github.com
+  PreferredAuthentications publickey
+  IdentitiesOnly yes
+  IdentityFile ~/.ssh/id_rsa
+
+# Example git host setup for non-default keypair
+# $ git clone git@nondefault-github:user/repos
+Host nondefault-github
+  User git
+  Hostname github.com
+  PreferredAuthentications publickey
+  IdentitiesOnly yes
+  IdentityFile ~/.ssh/id_rsa
+EOF
+fi
+
+if ! grep -q "github" "$HOME/.ssh/known_hosts"; then
+  ssh-keyscan -t rsa github.com >> "$HOME/.ssh/known_hosts"
+  echo "Added github to known_hosts" >&2
+fi

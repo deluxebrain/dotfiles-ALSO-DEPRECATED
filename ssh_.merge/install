@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_PATH" || exit 1
+
+# drwx------
+if ! chmod 700 "$HOME/.ssh"; then
+    echo "ERROR: Unable to set file permissions on ssh directory" >&2
+    false; exit
+fi
