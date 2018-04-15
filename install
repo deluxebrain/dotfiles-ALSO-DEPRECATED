@@ -94,9 +94,6 @@ function main()
   # these will be baked into .gitlocal
   get_git_committer_details || return
 
-  echo "Setting up ssh_config" >&2
-  ./scripts/setup-ssh-config || return
-
   echo "Setting up default ssh keypair" >&2
   ./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
 
