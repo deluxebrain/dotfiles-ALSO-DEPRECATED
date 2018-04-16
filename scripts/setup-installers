@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_PATH" || exit 1
+
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+
+function dir_is_submodule()
+(
+  local git_root
+
+  cd "$1" || return
+  git_root="$(git rev-parse --show-toplevel)" || return
+  ! [ "$GIT_ROOT" = "$git_root" ]
+)
+
+function find_and_run_installers()
+{
+  local installer
+
+  # mindepth: only search subdirectories
+  # exclude subdirectories ending with #
+  # exclude subdirectories that are git submodules
+  find . \
+    -mindepth 2 \
+    -maxdepth 3 \
+    -name 'install' \
+    -not -path '*#/*' | \
+    while read -r installer; do
+      if dir_is_submodule "$(dirname "$installer")"; then
+        echo "INFO: Ignoring installer $installer in submodule" >&2
+        continue
+      fi
+      echo "INFO: Found installer $installer" >&2
+      # redirect stdin to prevent while loop breaking early
+      # "$installer" </dev/null
+      "$installer"
+      echo "$installer"
+      if (( $? != 0)); then
+        echo "ERROR: Unexpected error running installer $installer" >&2
+        false; return
+      fi
+    done
+}
+
+function main()
+{
+  cd "$GIT_ROOT" || return
+  find_and_run_installers || return
+}
+
+main "$@"
+exit $?

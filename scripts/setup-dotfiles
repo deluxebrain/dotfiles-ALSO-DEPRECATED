@@ -5,6 +5,11 @@ cd "$SCRIPT_PATH" || exit 1
 
 # Utility functions
 
+function get_git_root_dir()
+{
+  git rev-parse --show-toplevel
+}
+
 function render_template()
 {
   local template
@@ -184,7 +189,7 @@ function check_for_and_handle_existing_file()
       # -L to unlink any symlinks so we get a hard backup
       cp -f -R -L "$dst" "$backup_path" && \
         rm -rf "$dst" || return
-      if ! $?; then
+      if (( $? != 0 )); then
         echo "ERROR: Unable to backup $dst to $backup_path" >&2
       fi
     elif $g_skip_all || $g_skip; then
@@ -261,8 +266,10 @@ function main()
   done
 
   # Change into the root git directory for the current script
-  cd "$(git rev-parse --show-toplevel)" || return
-  link_files
+  cd "$(get_git_root_dir)" || return
+
+  # Run the file linker
+  link_files || return
 }
 
 main "$@"

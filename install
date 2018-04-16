@@ -52,53 +52,25 @@ function get_git_committer_details()
   fi
 }
 
-function find_and_run_installers()
-{
-  local installer
-
-  echo "Looking for installers ..." >&2
-  # only search subdirectories
-  # exclude subdirectories ending with #
-  # exclude subdirectories that are git submodules
-  find . \
-    -mindepth 2 \
-    -maxdepth 3 \
-    -name 'install' \
-    -not -path '*#/*' | \
-    while read -r installer; do
-      echo "Found installer $installer" >&2
-      # redirect stdin to prevent while loop breaking early
-      # "$installer" </dev/null
-      "$installer"
-      if ! $?; then
-        echo "FAIL: Unexpected error running installer $installer" >&2
-        return 1
-      fi
-    done
-}
-
-function install_packages()
-{
-  :
-  # ./packages/brew-taps || return
-}
-
 function main()
 {
   local answer
 
-  echo "Initializing all submodules..." >&2
+  echo "INFO: Initializing all submodules..." >&2
   git submodule update --init --recursive || return
 
   # get the users git details
   # these will be baked into .gitlocal
   get_git_committer_details || return
 
-  echo "Setting up default ssh keypair" >&2
+  echo "INFO: Setting up default ssh keypair" >&2
   ./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
 
-  echo "Setting up dotfiles" >&2
+  echo "INFO: Setting up dotfiles" >&2
   ./scripts/setup-dotfiles || return
+
+  echo "INFO: Running all installers" >&2
+  ./scripts/setup-installers || return
 
   #msg_info "Installing packages..." >&2
   #install_packages
