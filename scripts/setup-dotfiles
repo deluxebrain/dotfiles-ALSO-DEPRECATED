@@ -5,17 +5,40 @@ cd "$SCRIPT_PATH" || exit 1
 
 # Utility functions
 
+function fix_file_permissions()
+{
+  if (( $(id -u) == 0 )); then
+    if [ -d "$1" ]; then
+      chown -R $SUDO_USER:$SUDO_USER "$1"
+    else
+      chown $SUDO_USER:$SUDO_USER "$1"
+    fi
+  fi
+}
+
+function strip_file_extension()
+{
+  echo "$1" | sed "s/^\(.\+\)\.\(.\+\)/\1/"
+}
+
 function get_git_root_dir()
 {
   git rev-parse --show-toplevel
 }
 
 function render_template()
-{
-  local template
+(
+  local template model_path
   template="$(cat "$1")"
+  model_path="$(strip_file_extension "$1").model"
+
+  if [ -x "$model_path" ]; then
+    if ! source "$model_path"; then
+      echo "ERROR: Unexpected error sourcing $model_path" >&2
+    fi
+  fi
   eval "echo \"${template}\""
-}
+)
 
 function path_exists()
 {
@@ -30,7 +53,7 @@ function dst_points_to_src()
 
   # check if dst is a symlink that points to src
   # readlink returns blank and error if not a symlink
-  target="$(readlink $"dst" > /dev/null >&2)" || return
+  target="$(readlink "$dst")" || return
   [ "$target" == "$src" ]
 }
 
@@ -117,7 +140,7 @@ function form_filename()
 
 function form_link_path()
 {
-  local dst link_type filename
+  local filename link_type dst
 
   filename="$(form_filename "$1")"
   link_type="$(get_link_type "$1")"
@@ -126,7 +149,7 @@ function form_link_path()
   dotfile)
     dst="${HOME}/.${filename}"
     ;;
-  symlink|merge|template|create)
+  symlink|merge|template)
     dst="${HOME}/${filename}"
     ;;
   *)
@@ -143,6 +166,7 @@ function form_link_path()
 function link_files()
 {
   local src dst
+  local g_overwrite g_backup g_skip
 
   # Find:
   # -H: For symlinks use the file info of the linked file
@@ -172,7 +196,6 @@ function link_files()
 function check_for_and_handle_existing_file()
 {
   local src dst backup_path
-  local g_overwrite g_backup g_skip
   src="$1"; dst="$2"
   g_overwrite=false; g_backup=false; g_skip=false
 
@@ -221,6 +244,13 @@ function link_file()
     ;;
   merge)
     # create a standalone dotfile that is outside of the repository
+    if ! [ -d "$dst" ]; then
+      if ! mkdir "$dst"; then
+        echo "ERROR: Unable to create directory $dst" >&2
+        false; return
+      fi
+    fi
+    fix_file_permissions "$dst"
     # ensure the source has a trailing / to ensure the contents are copied
     # ( otherwise end up with a nested directory )
     rsync -a --exclude "install" --update "$src/" "$dst"
@@ -230,14 +260,7 @@ function link_file()
       echo "ERROR: Unable to render template $src to $dst" >&2
       false; return
     fi
-    ;;
-  create)
-    if ! [ -d "$dst" ]; then
-      if ! mkdir "$dst"; then
-        echo "ERROR: Unable to create directory $dst" >&2
-        false; return
-      fi
-    fi
+    fix_file_permissions "$dst"
     ;;
   *)
     echo "ERROR: Unknown link format $link_type" >&2

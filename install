@@ -54,8 +54,6 @@ function get_git_committer_details()
 
 function main()
 {
-  local answer
-
   echo "INFO: Initializing all submodules..." >&2
   git submodule update --init --recursive || return
 
@@ -71,19 +69,6 @@ function main()
 
   echo "INFO: Running all installers" >&2
   ./scripts/setup-installers || return
-
-  #msg_info "Installing packages..." >&2
-  #install_packages
-  #if (( $? != 0 )); then
-  #  msg_error "Unexpected issue installing packages" >&2
-  #  return 1
-  #fi
-
-  #run_installers
-  #if (( $? != 0 )); then
-  #  msg_error "Unexpected issue running in installers" >&2
-  #  return 1
-  #fi
 }
 
 main "$@"

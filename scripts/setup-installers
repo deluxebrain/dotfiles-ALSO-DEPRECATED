@@ -35,7 +35,6 @@ function find_and_run_installers()
       # redirect stdin to prevent while loop breaking early
       # "$installer" </dev/null
       "$installer"
-      echo "$installer"
       if (( $? != 0)); then
         echo "ERROR: Unexpected error running installer $installer" >&2
         false; return

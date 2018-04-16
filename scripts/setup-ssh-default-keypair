@@ -19,11 +19,10 @@ fi
 
 if (( $(id -u) == 0 )); then
   chown $SUDO_USER:$SUDO_USER $HOME/.ssh/id_rsa*
-  echo "Corrected default keypair fileownership" >&2
 fi
 
 # -rw-------
 chmod 600 "$HOME/.ssh/id_rsa" || exit
 # -rw-r--r--
 chmod 644 "$HOME/.ssh/id_rsa.pub" || exit
-echo "Permissions set on default keypair" >&2
+
