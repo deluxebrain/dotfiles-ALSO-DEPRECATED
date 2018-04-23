@@ -21,16 +21,16 @@ function user_pause()
 
 function user_prompt()
 {
-  echo
+  echo >&2
   while [ -z "$(strip_whitespace $REPLY)" ]; do
     read -r -p "$1: "
   done
-  echo "$answer"
+  echo "$REPLY"
 }
 
 function user_confirm()
 {
-  echo
+  echo >&2
   while [[ ! $REPLY =~ ^[YyNn]$ ]]; do
     read -r -p "$1 (y/n) "
   done
@@ -39,10 +39,16 @@ function user_confirm()
 
 function ui()
 {
-  if [[ -z "$(git config user.name)" || \
-    -z "$(git config user.email)" ]]; then
-    git config --global user.name "$(user_prompt "Enter git user name")"
-    git config --global user.email "$(user_prompt "Enter git email")"
+  export GIT_USERNAME
+  export GIT_USEREMAIL
+
+  if [[ -n "$(git config --global --includes user.name)" && \
+    -n "$(git config --global --includes user.email)" ]]; then
+    GIT_USERNAME="$(git config --global --includes user.name)"
+    GIT_USEREMAIL="$(git config --global --includes user.email)"
+  else
+    GIT_USERNAME="$(user_prompt "Enter git user name")"
+    GIT_USEREMAIL="$(user_prompt "Enter git email")"
   fi
 }
 
@@ -57,15 +63,12 @@ function create_dotfiles_group()
 
 function main()
 {
-  echo "INFO: Initializing all submodules..." >&2
-  git submodule update --init --recursive || return
+  git submodule update --init --recursive >/dev/null 2>&1 || return
+  git submodule foreach git checkout master >/dev/null 2>&1 || return
 
   ui || return
 
   create_dotfiles_group || return
-
-  #echo "INFO: Setting up default ssh keypair" >&2
-  #./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
 
   echo "INFO: Setting up dotfiles" >&2
   ./scripts/setup-dotfiles dotfiles || return

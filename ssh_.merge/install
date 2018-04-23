@@ -3,7 +3,7 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
 
-if [[ -z "$(git config user.email)" ]]; then
+if [[ -z "$GIT_USEREMAIL" ]]; then
     echo "ERROR: Git user email is not set" >&2
     false; exit
 fi
@@ -17,7 +17,7 @@ fi
 if ! [ -f "$HOME/.ssh/id_rsa" ]; then
   ssh-keygen -t rsa \
     -f "$HOME/.ssh/id_rsa" \
-    -C "$(git config user.email)" \
+    -C "$GIT_USEREMAIL" \
     -N "" \
     -q || exit
   echo "Created default ssh keypair" >&2

@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 
-export GIT_NAME
-export GIT_EMAIL
-
-if [[ -z "$(git config user.name)" ]]; then
+if [[ -z "$GIT_USERNAME" ]]; then
     echo "ERROR: Git user name is not set" >&2
     false; exit
 fi
 
-if [[ -z "$(git config user.email)" ]]; then
+if [[ -z "$GIT_USEREMAIL" ]]; then
     echo "ERROR: Git user email is not set" >&2
     false; exit
 fi
 
-GIT_NAME="$(git config user.name)"
-GIT_EMAIL="$(git config user.email)"
 

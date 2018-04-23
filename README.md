@@ -1,5 +1,12 @@
 # @deluxebrain does dotfiles
 
+TODO this all needs re-writing and updating
+
+NOTES:
+
+- Dotfiles are SYMLINKED in hence the repos should be FORKED ( i.e. changes to the dotfiles post installation will be reflected back into the repository)
+- Override the installer to COPY the dotfiles if you want to use a CLONE
+
 ## Installation
 
 If running on MacOS you'll need to export your homebrew github token:
