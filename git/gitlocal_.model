@@ -3,21 +3,16 @@
 export GIT_NAME
 export GIT_EMAIL
 
-function user_prompt()
-{
-  echo
-  while [ -z "${REPLY// }" ]; do
-    read -r -p "$1: "
-  done
-  echo "$answer"
-}
-
-if [[ -n "$(git config user.name)" && \
-  -n "$(git config user.email)" ]]; then
-  GIT_NAME="$(git config user.name)"
-  GIT_EMAIL="$(git config user.email)"
-else
-  GIT_NAME="$(user_prompt "Enter git user name")"
-  GIT_EMAIL="$(user_prompt "Enter git email")"
+if [[ -z "$(git config user.name)" ]]; then
+    echo "ERROR: Git user name is not set" >&2
+    false; exit
 fi
+
+if [[ -z "$(git config user.email)" ]]; then
+    echo "ERROR: Git user email is not set" >&2
+    false; exit
+fi
+
+GIT_NAME="$(git config user.name)"
+GIT_EMAIL="$(git config user.email)"
 

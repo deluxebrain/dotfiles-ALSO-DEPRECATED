@@ -3,8 +3,31 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
 
+if [[ -z "$(git config user.email)" ]]; then
+    echo "ERROR: Git user email is not set" >&2
+    false; exit
+fi
+
 # drwx------
 if ! chmod 700 "$HOME/.ssh"; then
     echo "ERROR: Unable to set file permissions on ssh directory" >&2
     false; exit
 fi
+
+if ! [ -f "$HOME/.ssh/id_rsa" ]; then
+  ssh-keygen -t rsa \
+    -f "$HOME/.ssh/id_rsa" \
+    -C "$(git config user.email)" \
+    -N "" \
+    -q || exit
+  echo "Created default ssh keypair" >&2
+fi
+
+if (( $(id -u) == 0 )); then
+  chown $SUDO_USER:$SUDO_USER $HOME/.ssh/id_rsa*
+fi
+
+# -rw-------
+chmod 600 "$HOME/.ssh/id_rsa" || exit
+# -rw-r--r--
+chmod 644 "$HOME/.ssh/id_rsa.pub" || exit

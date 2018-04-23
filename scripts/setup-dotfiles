@@ -9,6 +9,7 @@ GROUP="$1"
 
 function get_user()
 {
+  # if (( $(id -u) == 0 )); then
   echo "${SUDO_USER:-$USER}"
 }
 
@@ -99,7 +100,7 @@ function prompt_for_file_overwrite_action()
       "Backup all") g_backup_all=true; break ;;
       Skip) g_skip=true; break ;;
       "Skip all") g_skip_all=true; break ;;
-      Exit) exit 1 ;;
+      "Exit") exit 1 ;;
       *) echo "ERROR: Invalid selection" >&2 ;;
     esac
   done < /dev/tty

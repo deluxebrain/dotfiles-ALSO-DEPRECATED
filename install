@@ -37,18 +37,12 @@ function user_confirm()
   [[ $REPLY =~ ^[Yy$ ]]
 }
 
-function get_git_committer_details()
+function ui()
 {
-  export GIT_NAME
-  export GIT_EMAIL
-
-  if [[ -n "$(git config user.name)" && \
-    -n "$(git config user.email)" ]]; then
-    GIT_NAME="$(git config user.name)"
-    GIT_EMAIL="$(git config user.email)"
-  else
-    GIT_NAME="$(user_prompt "Enter git user name")"
-    GIT_EMAIL="$(user_prompt "Enter git email")"
+  if [[ -z "$(git config user.name)" || \
+    -z "$(git config user.email)" ]]; then
+    git config --global user.name "$(user_prompt "Enter git user name")"
+    git config --global user.email "$(user_prompt "Enter git email")"
   fi
 }
 
@@ -66,14 +60,12 @@ function main()
   echo "INFO: Initializing all submodules..." >&2
   git submodule update --init --recursive || return
 
-  # get the users git details
-  # these will be baked into .gitlocal
-  get_git_committer_details || return
+  ui || return
 
   create_dotfiles_group || return
 
-  echo "INFO: Setting up default ssh keypair" >&2
-  ./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
+  #echo "INFO: Setting up default ssh keypair" >&2
+  #./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
 
   echo "INFO: Setting up dotfiles" >&2
   ./scripts/setup-dotfiles dotfiles || return
