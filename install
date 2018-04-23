@@ -52,6 +52,15 @@ function get_git_committer_details()
   fi
 }
 
+function create_dotfiles_group()
+{
+  grep -q -F dotfiles /etc/group \
+    || sudo groupadd dotfiles \
+    || return
+
+  sudo usermod -a -G dotfiles "${SUDO_USER:-$USER}"
+}
+
 function main()
 {
   echo "INFO: Initializing all submodules..." >&2
@@ -61,11 +70,13 @@ function main()
   # these will be baked into .gitlocal
   get_git_committer_details || return
 
+  create_dotfiles_group || return
+
   echo "INFO: Setting up default ssh keypair" >&2
   ./scripts/setup-ssh-default-keypair "$GIT_EMAIL" || return
 
   echo "INFO: Setting up dotfiles" >&2
-  ./scripts/setup-dotfiles || return
+  ./scripts/setup-dotfiles dotfiles || return
 
   echo "INFO: Running all installers" >&2
   ./scripts/setup-installers || return

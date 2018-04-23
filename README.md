@@ -14,6 +14,7 @@ Then install as follows:
 ./install
 ```
 
+
 ```sh
 git clone git@github.com:deluxebrain/dotfiles.git && cd dotfiles
 ./install 2>&1 \
