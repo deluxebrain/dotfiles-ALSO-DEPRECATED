@@ -1,0 +1,13 @@
+# ~/.bash_profile
+# One of the the following is read by Bash, in the following order:
+# ~/.bash_profile, ~/.bash_login, ~/.profile
+# Executed by the command interpreter for login shells:
+# - logged in via tty ( as opposed to GUI )
+# - logged in remotely ( e.g. via ssh )
+
+# if running bash
+if [ -n "$BASH_VERSION" ]; then
+    #[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
+	:
+fi
+
