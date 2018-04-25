@@ -221,8 +221,8 @@ function check_for_and_handle_existing_file()
     elif $g_backup_all || $g_backup; then
       backup_path="$(form_backup_path "$dst")"
       # -L to unlink any symlinks so we get a hard backup
-      cp -f -R -L "$dst" "$backup_path" && \
-        rm -rf "$dst" || return
+      # -p to preserve file permissions
+      cp -p -f -R -L "$dst" "$backup_path" || return
       if (( $? != 0 )); then
         echo "ERROR: Unable to backup $dst to $backup_path" >&2
       fi

@@ -17,7 +17,7 @@ function set_shelloptions()
     shopt -s histappend # append to history file ( instead of overwriting )
 }
 
-funtion configure_history()
+function configure_history()
 {
     # don't put duplicate lines or lines starting with space in the history.
     HISTCONTROL=ignoreboth
@@ -76,10 +76,10 @@ configure_prompt
 start_completions
 
 # Aliases
-[ -f "$HOME/.bash_aliases ] && source "$HOME/.bash_aliases"
+[ -f "$HOME/.bash_aliases" ] && source "$HOME/.bash_aliases"
 
 # Start ssh-agent
-[ -x "$HOME/.ssh/.ssh-agent ] && source "$HOME/.ssh/.ssh-agent"
+[ -x "$HOME/.ssh/.ssh-agent" ] && source "$HOME/.ssh/.ssh-agent"
 
 unset -f set_shelloptions
 unset -f configure_history
