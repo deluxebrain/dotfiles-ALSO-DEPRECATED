@@ -59,5 +59,9 @@ alias lsp='sudo lsof -i -n -P | grep LISTEN'
 
 # Development
 
-alias pyl="pyenv-wrapper"
+# pyi [DISTRIBUTION]: Install lastest version of DISTRIBUTION
+alias pyi="pyenv-wrapper install"
+
+# pyl [DISTRIBUTION]: List DISTRIBUTION versions
+alias pyl="pyenv-wrapper list"
 

@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+function get_versions()
+{
+    pyenv install --list \
+    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3,\4,\1/p' \
+    | sort -k1V \
+    | awk -F"," -v distribution="$1" '$1==distribution {print $3}'
+}
+
 function get_latest_version()
 {
     pyenv install --list \

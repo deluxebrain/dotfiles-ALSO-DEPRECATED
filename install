@@ -61,6 +61,12 @@ function create_dotfiles_group()
   sudo usermod -a -G dotfiles "${SUDO_USER:-$USER}"
 }
 
+function install_packages()
+{
+  ./packages/common-packages || return
+
+}
+
 function main()
 {
   git submodule update --init --recursive >/dev/null 2>&1 || return
@@ -75,6 +81,9 @@ function main()
 
   echo "INFO: Running all installers" >&2
   ./scripts/setup-installers || return
+
+  echo "INFO: Installing packages" >&2
+  install_packages || return
 }
 
 main "$@"
