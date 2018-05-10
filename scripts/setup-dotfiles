@@ -23,7 +23,7 @@ function fix_file_permissions()
   if readlink "$1"; then
     chown -h "$(get_user)":"$(get_group)" "$1"
   else
-    chown -h "$(get_user)":"$(get_group)" "$1"
+    chown "$(get_user)":"$(get_group)" "$1"
   fi
 }
 

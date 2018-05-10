@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+
+chown -R "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" ~/.pyenv
+
