@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-function get_versions()
+function usage()
 {
-    pyenv install --list \
-    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3,\4,\1/p' \
-    | sort -k1V \
-    | awk -F"," -v distribution="$1" '$1==distribution {print $3}'
+  cat <<EOF
+Usage $0 [install, versions, distributions] [distribution]
+EOF
+
+  return 1
 }
 
 function get_latest_version()
@@ -18,7 +19,24 @@ function get_latest_version()
     | awk 'END { if (NR != 0) { print; exit 0 } else { exit 1 }}'
 }
 
-function main()
+function versions()
+{
+    pyenv install --list \
+    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3,\4,\1/p' \
+    | sort -k1V \
+    | awk -F"," -v distribution="$1" '$1==distribution {print $3}'
+}
+
+function distributions()
+{
+    pyenv install --list \
+    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3/p' \
+    | sed 's/^$/python/' \
+    | sort \
+    | uniq
+}
+
+function install()
 {
     local name="$1"
     local version
@@ -36,4 +54,16 @@ function main()
     fi
 }
 
-main "$@"
+ACTION="$1"; shift
+if [ -z "$ACTION" ]; then
+  usage
+  exit
+fi
+
+case "$ACTION" in
+install) install "$@";;
+versions) versions "$@";;
+distributions) distributions "$@";;
+*) usage; exit;;
+esac
+
