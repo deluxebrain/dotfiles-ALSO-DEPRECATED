@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+ACTUAL_USER="${SUDO_USER:-$USER}"
 
-chown -R "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" ~/.pyenv
+# pyenv
+sudo -u "$ACTUAL_USER" \
+    git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+chown -R "$ACTUAL_USER" ~/.pyenv
 
+# pyenv-virtualenv
+sudo -u "$ACTUAL_USER" \
+    git clone https://github.com/pyenv/pyenv-virtualenv.git ~/.pyenv/plugins/pyenv-virtualenv
+chown -R "$ACTUAL_USER" ~/.pyenv/plugins/pyenv-virtualenv
