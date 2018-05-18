@@ -64,6 +64,7 @@ function create_dotfiles_group()
 function install_packages()
 {
   ./packages/common-packages || return
+  ./packages/apt-packages || return
   ./packages/python-packages || return
 }
 

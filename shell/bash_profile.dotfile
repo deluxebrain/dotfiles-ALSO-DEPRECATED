@@ -12,6 +12,9 @@ fi
 function exports()
 {
     export PYENV_ROOT="$HOME/.pyenv"
+
+    # Powerline
+    export XDG_CONFIG_HOME="$HOME/.config"
 }
 
 function path()

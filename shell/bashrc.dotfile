@@ -25,6 +25,15 @@ function configure_history()
     HISTFILESIZE=2000
 }
 
+function start_powerline()
+{
+    command -v powerline-daemon >/dev/null 2>&1 || return
+    powerline-daemon -q
+    export POWERLINE_BASH_CONTINUATION=1
+    export POWERLINE_BASH_SELECT=1
+    source "$HOME/.local/lib/python3.6/site-packages/powerline/bindings/bash/powerline.sh"
+}
+
 function configure_prompt()
 {
     # set variable identifying the chroot you work in (used in the prompt below)
@@ -72,7 +81,7 @@ function start_completions()
 
 set_shelloptions
 configure_history
-configure_prompt
+start_powerline || configure_prompt
 start_completions
 
 # Aliases
@@ -83,5 +92,6 @@ start_completions
 
 unset -f set_shelloptions
 unset -f configure_history
+unset -f powerline
 unset -f configure_prompt
 unset -f start_completions
