@@ -9,8 +9,6 @@ if (( $(id -u) != 0 )); then
   exit 1
 fi
 
-ACTUAL_USER="${SUDO_USER:-$USER}"
-
 function usage()
 {
   cat >&2 <<EOF
