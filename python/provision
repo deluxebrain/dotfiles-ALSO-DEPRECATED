@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+pyenv-wrapper install
+pyenv-wrapper install miniconda3

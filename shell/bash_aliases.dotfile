@@ -1,3 +1,5 @@
+shopt -s expand_aliases
+
 # Navigation
 
 alias ..="cd .."

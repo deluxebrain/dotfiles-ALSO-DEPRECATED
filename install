@@ -83,13 +83,10 @@ function install_packages()
 
 function parse_options()
 {
-  local run_provisioners
-  run_provisioners=false
-
   while getopts ":p" opt; do
     case $opt in
     p)
-      run_provisioners=true
+      g_run_provisioners=true
       ;;
     h|*)
       usage; return
@@ -100,6 +97,9 @@ function parse_options()
 
 function main()
 {
+  local g_run_provisioners
+  g_run_provisioners=false
+
   parse_options "$@" || return
   # strip parsed options ( up to -- )
   shift $(($OPTIND-1))
@@ -119,6 +119,14 @@ function main()
 
   echo "INFO: Installing packages" >&2
   install_packages || return
+
+  echo "INFO: Reloading environment" >&2
+  source ~/.bash_profile
+
+  if $g_run_provisioners; then
+    echo "INFO: Running all provisioners" >&2
+    ./scripts/setup-installers "provision" || return
+  fi
 }
 
 main "$@"

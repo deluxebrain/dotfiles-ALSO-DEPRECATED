@@ -36,7 +36,7 @@ function find_and_run_installers()
   find . \
     -mindepth 2 \
     -maxdepth 3 \
-    -name "g_installer" \
+    -name "$g_installer" \
     -not -path '*#/*' | \
     while read -r installer; do
       if dir_is_submodule "$(dirname "$installer")"; then

@@ -4,6 +4,8 @@
 # One of the the following is read by Bash, in the following order:
 # ~/.bash_profile, ~/.bash_login, ~/.profile
 
+shopt -s expand_aliases # allow alias expansion in scripts
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
