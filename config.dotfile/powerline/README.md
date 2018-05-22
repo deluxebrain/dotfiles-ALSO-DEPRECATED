@@ -7,7 +7,8 @@ Powerline is activated and configured at the user level within their .bashrc dot
 Running Powerline from a root shell means either configuring the root user .bashrc dotfile or elevating to a root shell without taking on the root user context. The latter is done as follows:
 
 ```sh
-sudo su -s
+# Basically equivalent to sudo bash
+sudo -s
 ```
 
 ## Configuration

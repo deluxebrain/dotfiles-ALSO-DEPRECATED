@@ -7,6 +7,4 @@ sudo apt install -y \
 # pip packages should be installed as the actual user
 ACTUAL_USER="${SUDO_USER:-$USER}"
 
-# sudo -u "$ACTUAL_USER" pip3 install --user powerline-status
-
 sudo -u "$ACTUAL_USER" pip3 install pipenv

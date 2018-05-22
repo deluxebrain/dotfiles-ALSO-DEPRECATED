@@ -9,6 +9,19 @@ if (( $(id -u) != 0 )); then
   exit 1
 fi
 
+function usage()
+{
+  cat >&2 <<EOF
+$(basename "$0") [OPTION] -- [OPTION]
+-p : run provisioners
+-h : help
+-- -f : force overwrite existing dotfiles
+-- -b : backup existing dotfiles
+-- -s : skip existing dotfiles
+EOF
+  false
+}
+
 function strip_whitespace()
 {
   echo "${1// }"
@@ -68,8 +81,29 @@ function install_packages()
   ./packages/python-packages || return
 }
 
+function parse_options()
+{
+  local run_provisioners
+  run_provisioners=false
+
+  while getopts ":p" opt; do
+    case $opt in
+    p)
+      run_provisioners=true
+      ;;
+    h|*)
+      usage; return
+      ;;
+    esac
+  done
+}
+
 function main()
 {
+  parse_options "$@" || return
+  # strip parsed options ( up to -- )
+  shift $(($OPTIND-1))
+
   git submodule update --init --recursive >/dev/null 2>&1 || return
   git submodule foreach git checkout master >/dev/null 2>&1 || return
 
@@ -78,7 +112,7 @@ function main()
   create_dotfiles_group || return
 
   echo "INFO: Setting up dotfiles" >&2
-  ./scripts/setup-dotfiles dotfiles || return
+  ./scripts/setup-dotfiles "$@" || return
 
   echo "INFO: Running all installers" >&2
   ./scripts/setup-installers || return
@@ -88,6 +122,4 @@ function main()
 }
 
 main "$@"
-
 exit $?
-

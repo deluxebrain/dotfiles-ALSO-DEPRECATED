@@ -5,6 +5,18 @@ cd "$SCRIPT_PATH" || exit 1
 
 GROUP="$1"
 
+function usage()
+{
+  cat >&2 <<EOF
+$(basename "$0") [OPTION]
+-f : force overwrite existing dotfiles
+-b : backup existing dotfiles
+-s : skip existing dotfiles
+-h : help
+EOF
+  false
+}
+
 # Utility functions
 
 function get_user()
@@ -285,22 +297,44 @@ function link_file()
 
 # Entry point
 
-function main()
+function parse_options()
 {
-  local g_overwrite_all g_backup_all g_skip_all
-  g_overwrite_all=false
-  g_backup_all=false
-  g_skip_all=false
+  local opt opt_set
+  opt_set=false
 
   # e.g. fA:x
   # expect flag -f, argument -A, flag -x
   # if very first character is : then  use silent error reporting
-  while getopts ":fv" opt; do
+  while getopts ":fbsh" opt; do
     case $opt in
     f)
-      g_overwrite_all=true ;;
+      $opt_set && { usage; return; }
+      opt_set=true; g_overwrite_all=true
+      ;;
+    b)
+      $opt_set && { usage; return; }
+      opt_set=true; g_backup_all=true
+      ;;
+    s)
+      $opt_set && { usage; return; }
+      opt_set=true; g_skip_all=true
+      ;;
+    h|*)
+      usage; return
+      ;;
     esac
   done
+}
+
+function main()
+{
+  local g_overwrite_all g_backup_all g_skip_all
+  local options
+  g_overwrite_all=false
+  g_backup_all=false
+  g_skip_all=false
+
+  parse_options "$@" || return
 
   # Change into the root git directory for the current script
   cd "$(get_git_root_dir)" || return
