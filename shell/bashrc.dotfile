@@ -31,7 +31,7 @@ function start_powerline()
     powerline-daemon -q
     export POWERLINE_BASH_CONTINUATION=1
     export POWERLINE_BASH_SELECT=1
-    source "$HOME/.local/lib/python3.6/site-packages/powerline/bindings/bash/powerline.sh"
+    source "/usr/share/powerline/bindings/bash/powerline.sh"
 }
 
 function configure_prompt()
@@ -92,6 +92,6 @@ start_completions
 
 unset -f set_shelloptions
 unset -f configure_history
-unset -f powerline
+unset -f start_powerline
 unset -f configure_prompt
 unset -f start_completions
