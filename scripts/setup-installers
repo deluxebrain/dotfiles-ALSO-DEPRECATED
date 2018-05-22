@@ -3,15 +3,27 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
 
-GIT_ROOT="$(git rev-parse --show-toplevel)"
+function usage()
+{
+  cat >&2 <<EOF
+$(basename "$0") installer
+installer : filename of installer file to run
+EOF
+  false
+}
+
+function git_root()
+{
+  git rev-parse --show-toplevel
+}
 
 function dir_is_submodule()
 (
   local git_root
 
   cd "$1" || return
-  git_root="$(git rev-parse --show-toplevel)" || return
-  ! [ "$GIT_ROOT" = "$git_root" ]
+  git_root="$(git_root)" || return
+  ! [ "$g_git_root" = "$git_root" ]
 )
 
 function find_and_run_installers()
@@ -24,7 +36,7 @@ function find_and_run_installers()
   find . \
     -mindepth 2 \
     -maxdepth 3 \
-    -name 'install' \
+    -name "g_installer" \
     -not -path '*#/*' | \
     while read -r installer; do
       if dir_is_submodule "$(dirname "$installer")"; then
@@ -44,7 +56,15 @@ function find_and_run_installers()
 
 function main()
 {
-  cd "$GIT_ROOT" || return
+  local g_installer
+  local g_git_root
+
+  g_installer="$1"
+  [ -n "$g_installer" ] || { usage; return; }
+
+  g_git_root="$(git_root)" || return
+  cd "$g_git_root" || return
+
   find_and_run_installers || return
 }
 

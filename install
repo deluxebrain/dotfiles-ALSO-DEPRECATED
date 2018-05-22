@@ -112,10 +112,10 @@ function main()
   create_dotfiles_group || return
 
   echo "INFO: Setting up dotfiles" >&2
-  ./scripts/setup-dotfiles "$@" || return
+  ./scripts/setup-dotfiles "$@" "dotfiles" || return
 
   echo "INFO: Running all installers" >&2
-  ./scripts/setup-installers || return
+  ./scripts/setup-installers "install" || return
 
   echo "INFO: Installing packages" >&2
   install_packages || return
