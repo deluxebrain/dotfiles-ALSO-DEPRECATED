@@ -3,12 +3,11 @@
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
 
-GROUP="$1"
-
 function usage()
 {
   cat >&2 <<EOF
-$(basename "$0") [OPTION]
+$(basename "$0") [OPTION] groupname
+groupname : name of group to for dotfile file ownership
 -f : force overwrite existing dotfiles
 -b : backup existing dotfiles
 -s : skip existing dotfiles
@@ -27,7 +26,7 @@ function get_user()
 
 function get_group()
 {
-  echo "${GROUP:-`get_user`}"
+  echo "${g_group:-`get_user`}"
 }
 
 function fix_file_permissions()
@@ -324,12 +323,18 @@ function parse_options()
       ;;
     esac
   done
+
+  # strip parsed options ( up to -- )
+  shift $(($OPTIND-1))
+
+  g_group="$1"
+  [ -n "$g_group" ] || { usage; return; }
 }
 
 function main()
 {
   local g_overwrite_all g_backup_all g_skip_all
-  local options
+  local g_group
   g_overwrite_all=false
   g_backup_all=false
   g_skip_all=false
