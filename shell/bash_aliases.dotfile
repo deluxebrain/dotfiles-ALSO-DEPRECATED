@@ -75,3 +75,6 @@ alias pyl="pyenv local"
 
 # pyv: List installed python versions
 alias pyv="pyenv versions"
+
+# pipenv
+alias prp="pipenv run python"

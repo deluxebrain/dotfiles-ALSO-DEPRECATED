@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
+ACTUAL_USER="${SUDO_USER:-$USER}"
+
 pyenv-wrapper install
 pyenv-wrapper install miniconda3
+
+chown -R "$ACTUAL_USER" ~/.pyenv
+chown -R "$ACTUAL_USER" ~/.conda
