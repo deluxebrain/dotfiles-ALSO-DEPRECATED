@@ -130,4 +130,5 @@ function main()
 }
 
 main "$@"
+echo "*** PLEASE RELOAD ENVIRONMENT ***"
 exit $?
