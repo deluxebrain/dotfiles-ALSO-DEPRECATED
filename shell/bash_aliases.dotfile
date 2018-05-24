@@ -78,4 +78,4 @@ alias pyv="pyenv versions"
 
 # pipenv
 alias prp="pipenv run python"
-alias pei="pipenv install --python `pyenv which python`
+alias pei='pipenv install --python `pyenv which python`'
