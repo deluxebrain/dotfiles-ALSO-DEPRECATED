@@ -87,12 +87,14 @@ mkdir foo && cd $_
 pyenv local [VERSION]
 
 # Create pipenv environment
-pipenv --python [VERSION] install
+# or just use 'pei' alias
+pipenv install --python `pyenv which python`
 
 # Install dependencies
 pipenv install [PACKAGE]
 
 # Run Python script
+# or just use 'prp' alias
 pipenv run python [SCRIPT]
 
 # Enter pipenv environment shell
@@ -100,6 +102,7 @@ pipenv shell
 
 ```
 
+## Using Jupyter Notebook
 
 
 
