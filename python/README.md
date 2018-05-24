@@ -111,6 +111,9 @@ From within your activated conda environment:
 ```sh
 conda install -i jupyter # iPython
 conda install -i notebook # Notebook
+jupyter notebook
+```
+
 
 
 
