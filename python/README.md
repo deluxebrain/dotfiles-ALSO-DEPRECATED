@@ -115,8 +115,13 @@ conda install -y jupyter notebook
 conda install -y nb_conda
 
 # Launch the Jupyter server
+# Pulls in configuration from ~/.jupyter/jupyter_notebook_config.py
 jupyter notebook
 ```
+
+### Pipenv environment
+
+TODO
 
 
 

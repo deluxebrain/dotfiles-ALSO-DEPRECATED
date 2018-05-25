@@ -127,8 +127,9 @@ function main()
     echo "INFO: Running all provisioners" >&2
     ./scripts/setup-installers "provision" || return
   fi
+
+  echo "*** PLEASE RELOAD ENVIRONMENT ***"
 }
 
 main "$@"
-echo "*** PLEASE RELOAD ENVIRONMENT ***"
 exit $?
