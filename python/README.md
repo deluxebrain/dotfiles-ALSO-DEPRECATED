@@ -109,13 +109,11 @@ pipenv shell
 From within your activated conda environment:
 
 ```sh
-conda install -i jupyter # iPython
-conda install -i notebook # Notebook
+conda install -i jupyter notebook
+
+# Allow the current environment to be accessed from notebook
 jupyter notebook
 ```
-
-
-
 
 
 
