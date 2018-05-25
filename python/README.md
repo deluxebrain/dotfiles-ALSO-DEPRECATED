@@ -109,12 +109,14 @@ pipenv shell
 From within your activated conda environment:
 
 ```sh
-conda install -i jupyter notebook
+conda install -y jupyter notebook
 
 # Allow the current environment to be accessed from notebook
+conda install -y nb_conda
+
+# Launch the Jupyter server
 jupyter notebook
 ```
-
 
 
 
