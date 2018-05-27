@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-sudo apt install -y \
-    python3 \
-    python3-pip
+# DO NOT install any python / pip versions outside of pyenv
 
-# pip packages should be installed as the actual user
-ACTUAL_USER="${SUDO_USER:-$USER}"
-
-sudo -u "$ACTUAL_USER" pip3 install pipenv
+:

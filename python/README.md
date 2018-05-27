@@ -55,6 +55,25 @@ pyi [DISTRIBUTION] # Install latest DISTRIBUTION
 
 ## Project setup
 
+### VirtualEnv
+
+Note use conda or pipenv in preference.
+
+```sh
+# Create project virtualenv
+pyenv virtualenv [VERSION] [ENV_NAME]
+
+# Create and enter project directory
+mkdir foo && cd $_
+
+# Set local python environment
+pyenv local [ENV_NAME]
+
+# To manually activate / deactive the virtual environment
+pyenv activate [ENV_NAME]
+pyenv deactivate
+```
+
 ### Anaconda project
 
 ```sh
@@ -83,11 +102,12 @@ conda deactivate # or just cd out of project directory
 # Create and enter project directory
 mkdir foo && cd $_
 
-# Set local Python version
-pyenv local [VERSION]
+# Set local Python version with fallback to the global environment
+pyenv local [VERSION] global
 
 # Create pipenv environment
 # or just use 'pei' alias
+# Note that pipenv is pulled in from the global environment
 pipenv install --python `pyenv which python`
 
 # Install dependencies
@@ -104,12 +124,14 @@ pipenv shell
 
 ## Using Jupyter Notebook
 
+Note that the `jupyter` package installs both `notebook` and `ipykernel` as dependencies.
+
 ### Conda environment
 
 From within your activated conda environment:
 
 ```sh
-conda install -y jupyter notebook
+conda install -y jupyter
 
 # Allow the current environment to be accessed from notebook
 conda install -y nb_conda
@@ -121,10 +143,10 @@ jupyter notebook
 
 ### Pipenv environment
 
-TODO
+First, create your pipenv based project as above.
 
-
-
+```sh
+pipenv install jupyter
 
 
 

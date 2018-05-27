@@ -2,8 +2,25 @@
 
 ACTUAL_USER="${SUDO_USER:-$USER}"
 
+# Install latest CPython and miniconda distributions
 pyenv-wrapper install
 pyenv-wrapper install miniconda3
 
 chown -R "$ACTUAL_USER" ~/.pyenv
 chown -R "$ACTUAL_USER" ~/.conda
+
+# Create virtualenv for global Python and packages
+pyenv virtualenv \
+    `pyenv whence 2to3 \
+    | grep -e "^3" \
+    | sort -k1Vr \
+    | head` \
+    global
+
+# Install base packages into global virtualenv
+pyenv activate global
+pip install -y pipenv
+pyenv deactivate
+
+# Set global Python environment as default system then global
+pyenv global system global
