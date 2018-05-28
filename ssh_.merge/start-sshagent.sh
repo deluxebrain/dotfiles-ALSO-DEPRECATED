@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # check if ssh-agent is running
 # exit code of 2 is an actual error

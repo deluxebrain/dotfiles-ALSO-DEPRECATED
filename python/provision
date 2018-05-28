@@ -1,15 +1,15 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-ACTUAL_USER="${SUDO_USER:-$USER}"
+# Activation / deactivation of virtual envs requires
+# pyenv to have been init in the executing shell
+source ~/.bash_profile
 
 # Install latest CPython and miniconda distributions
 pyenv-wrapper install
 pyenv-wrapper install miniconda3
 
-chown -R "$ACTUAL_USER" ~/.pyenv
-chown -R "$ACTUAL_USER" ~/.conda
-
 # Create virtualenv for global Python and packages
+# using the latest available Python 3
 pyenv virtualenv \
     `pyenv whence 2to3 \
     | grep -e "^3" \
@@ -17,10 +17,13 @@ pyenv virtualenv \
     | head` \
     global
 
-# Install base packages into global virtualenv
+# Install base packages into the new global virtualenv
 pyenv activate global
-pip install -y pipenv
+pip install pipenv
 pyenv deactivate
 
-# Set global Python environment as default system then global
+# Set global Python environment to use the following environments
+# in the following order
+# This allows packages installed into the new global virtual
+# environment to be called without implicitly activiating it
 pyenv global system global

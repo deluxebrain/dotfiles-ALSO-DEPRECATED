@@ -1,11 +1,13 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
 
-if (( $(id -u) != 0 )); then
-  echo "This script must be run as root"
-  echo "Please use sudo or su"
+ACTUAL_USER="${SUDO_USER:-$USER}"
+
+if (( $(id -u) = 0 )); then
+  echo "This script must be run as the intended user"
+  echo "Please do not use sudo or su"
   exit 1
 fi
 
@@ -71,7 +73,7 @@ function create_dotfiles_group()
     || sudo groupadd dotfiles \
     || return
 
-  sudo usermod -a -G dotfiles "${SUDO_USER:-$USER}"
+  sudo usermod -a -G dotfiles "$ACTUAL_USER"
 }
 
 function install_packages()
@@ -130,6 +132,9 @@ function main()
 
   echo "*** PLEASE RELOAD ENVIRONMENT ***"
 }
+
+# Ask for sudo password upfront
+sudo -v
 
 main "$@"
 exit $?

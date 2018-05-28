@@ -1,7 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
+
+ACTUAL_USER="${SUDO_USER:-$USER}"
 
 function usage()
 {
@@ -18,23 +20,17 @@ EOF
 
 # Utility functions
 
-function get_user()
-{
-  # if (( $(id -u) == 0 )); then
-  echo "${SUDO_USER:-$USER}"
-}
-
 function get_group()
 {
-  echo "${g_group:-`get_user`}"
+  echo "${g_group:-ACTUAL_USER}"
 }
 
-function fix_file_permissions()
+function set_file_permissions()
 {
   if readlink "$1"; then
-    chown -h "$(get_user)":"$(get_group)" "$1"
+    sudo chown -h "$ACTUAL_USER":"$(get_group)" "$1"
   else
-    chown "$(get_user)":"$(get_group)" "$1"
+    sudo chown "$ACTUAL_USER":"$(get_group)" "$1"
   fi
 }
 
@@ -263,7 +259,7 @@ function link_file()
       echo "ERROR: Unable to link $src to $dst" >&2
       false; return;
     fi
-    fix_file_permissions "$dst"
+    set_file_permissions "$dst"
     ;;
   merge)
     # create a standalone dotfile that is outside of the repository
@@ -285,7 +281,7 @@ function link_file()
       echo "ERROR: Unable to render template $src to $dst" >&2
       false; return
     fi
-    fix_file_permissions "$dst"
+    set_file_permissions "$dst"
     ;;
   *)
     echo "ERROR: Unknown link format $link_type" >&2

@@ -1,4 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+ACTUAL_USER="${SUDO_USER:-$USER}"
 
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_PATH" || exit 1
@@ -22,10 +24,7 @@ if ! [ -f "$HOME/.ssh/id_rsa" ]; then
     -q || exit
   echo "Created default ssh keypair" >&2
 fi
-
-if (( $(id -u) == 0 )); then
-  chown $SUDO_USER:$SUDO_USER $HOME/.ssh/id_rsa*
-fi
+sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_rsa*"
 
 # -rw-------
 chmod 600 "$HOME/.ssh/id_rsa" || exit

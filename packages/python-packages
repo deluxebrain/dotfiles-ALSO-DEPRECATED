@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # DO NOT install any python / pip versions outside of pyenv
 
