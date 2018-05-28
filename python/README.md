@@ -119,7 +119,6 @@ pipenv run python [SCRIPT]
 
 # Enter pipenv environment shell
 pipenv shell
-
 ```
 
 ## Using Jupyter Notebook
@@ -148,8 +147,8 @@ First, create your pipenv based project as above.
 ```sh
 pipenv install jupyter
 
-
-
+pipenv run jupyter notebook
+```
 
 
 
