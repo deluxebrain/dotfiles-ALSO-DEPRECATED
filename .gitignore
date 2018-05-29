@@ -9,3 +9,9 @@ boxes/*
 
 # Jupyter
 jupyter.dotfile/migrated
+
+# Random stuff that gets dumped in .config
+config.dotfile/configstore
+config.dotfile/matplotlib
+
+

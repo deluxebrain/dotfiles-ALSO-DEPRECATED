@@ -15,5 +15,8 @@ curl -s https://api.github.com/repos/creationix/nvm/releases/latest \
 mkdir "$TMPDIR/nvm"
 tar -xzf "$TMPDIR/nvm.tar.gz" --directory "$TMPDIR/nvm"
 
-# find and run the installer
-find "$TMPDIR/nvm" -name "install.sh" | bash >/dev/null
+# Find and run the installer
+# Set the PROFILE variable to prevent the nvm installer writing into the user
+# shell dotfiles
+find "$TMPDIR/nvm" -name "install.sh" \
+| PROFILE="$TMPDIR/.profile" bash >/dev/null

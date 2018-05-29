@@ -38,6 +38,7 @@ path
 
 # Start nvm
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # Start pyenv / pyenv-virtualwrapper
 # Note this should be at the end of .profile (or equivalent)
