@@ -11,6 +11,10 @@ fi
 
 function exports()
 {
+    # nvm
+    export NVM_DIR="$HOME/.nvm"
+
+    # pyenv
     export PYENV_ROOT="$HOME/.pyenv"
 
     # Powerline
@@ -31,6 +35,9 @@ function path()
 
 exports
 path
+
+# Start nvm
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 # Start pyenv / pyenv-virtualwrapper
 # Note this should be at the end of .profile (or equivalent)
