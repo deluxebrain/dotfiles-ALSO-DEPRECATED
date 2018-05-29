@@ -18,5 +18,6 @@ tar -xzf "$TMPDIR/nvm.tar.gz" --directory "$TMPDIR/nvm"
 # Find and run the installer
 # Set the PROFILE variable to prevent the nvm installer writing into the user
 # shell dotfiles
+touch "$TMPDIR/.profile"
 find "$TMPDIR/nvm" -name "install.sh" \
 | PROFILE="$TMPDIR/.profile" bash >/dev/null
