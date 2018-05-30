@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bash_profile
+
 # Install latest versions of most-used NodeJS versions
 nvm install 8
 nvm install 10
