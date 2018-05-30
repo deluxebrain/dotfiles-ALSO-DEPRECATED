@@ -20,6 +20,7 @@ pyenv virtualenv \
 # Install base packages into the new global virtualenv
 pyenv activate global
 pip install pipenv
+pip install awscli
 pyenv deactivate
 
 # Set global Python environment to use the following environments

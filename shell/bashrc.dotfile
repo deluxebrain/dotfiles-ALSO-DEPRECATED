@@ -3,6 +3,37 @@
 # If not running interactively dont do anything
 [[ "$-" == *i* ]] || return
 
+function __PROMPT_COMMAND()
+{
+    __PROMPT_COMMAND_NVM
+}
+
+function __PROMPT_COMMAND_NVM()
+{
+    local node_version="$(nvm version)"
+    local nvmrc_path="$(nvm_find_nvmrc)"
+    local nvmrc_node_version
+
+    if [ -n "$nvmrc_path" ]; then
+        nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
+
+        if [ "$nvmrc_node_version" = "N/A" ]; then
+
+            # Install specificied NodeJS version
+            nvm install
+
+            # Check if the specified version is more general than the installed
+            # Overwrite it if so to prevent install being triggered again
+            if [ "$(head -n1 "$nvmrc_path")" != "$(nvm version)" ]; then
+                echo "$(nvm version)" > "$nvmrc_path"
+            fi
+
+        elif [ "$nvmrc_node_version" != "$node_version" ]; then
+            nvm use
+        fi
+    fi
+}
+
 function set_shelloptions()
 {
     shopt -s expand_aliases
@@ -27,6 +58,9 @@ function configure_history()
 
 function start_powerline()
 {
+    # PROMPT_COMMAND must be set before configuring Powerline
+    export PROMPT_COMMAND=__PROMPT_COMMAND
+
     command -v powerline-daemon >/dev/null 2>&1 || return
     powerline-daemon -q
     export POWERLINE_BASH_CONTINUATION=1

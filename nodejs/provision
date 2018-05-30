@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Install latest versions of most-used NodeJS versions
 nvm install 8
 nvm install 10
 
