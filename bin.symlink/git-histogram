@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Any file prefixed git- can be called using git [suffix]
+# git histogram
+
+function usage()
+{
+  cat >&2 <<EOF
+$(basename "$0") PERIOD(=day)
+PERIOD : Period to show git activity { hour, day, week, month, year }
+EOF
+  false
+}
+
+function parse_options()
+{
+  local opt
+
+  while getopts ":h" opt; do
+    case $opt in
+    h)
+      usage; return
+      ;;
+    esac
+  done
+
+  # strip parsed options ( up to -- )
+  shift $(($OPTIND-1))
+
+  g_seq_period="${1:-day}"
+  [ -n "$g_seq_period" ] || { usage; return; }
+}
+
+function main()
+{
+	local g_seq_period
+	local seq_top seq_step seq_name seq_counter
+	local author
+
+	parse_options "$@" || return
+
+	case "$g_seq_period" in
+		hour) seq_name=minutes; seq_top=60; seq_step=5;;
+		day) seq_name=hours; seq_top=24; seq_step=1;;
+		week) seq_name=days; seq_top=7; seq_step=1;;
+		month) seq_name=days; seq_top=28; seq_step=1;;
+		year) seq_name=days; seq_top=365; seq_step=10;;
+		*) usage; return
+	esac
+
+	author="$(git config user.name)"
+	echo "$author"
+	for seq_counter in $(seq $seq_top $((seq_step*-1)) 0)
+	do
+		git log \
+			--author "${author}" \
+			--before="${seq_counter} ${seq_name}" \
+			--after="$((seq_counter+seq_step)) ${seq_name}" \
+			--format=oneline | \
+			wc -l;
+	done | spark | echo "$g_seq_period: $(cat -)"
+}
+
+command -v spark >/dev/null 2>&1 || {
+	echo "ERROR: Missing dependency 'spark'"
+}
+
+main "$@"
+exit
+

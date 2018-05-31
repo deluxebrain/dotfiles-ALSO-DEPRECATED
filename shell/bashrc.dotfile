@@ -5,6 +5,11 @@
 
 function __PROMPT_COMMAND()
 {
+    if ! $__PROMPT_INIT; then
+        __NVM_DIRTY=false
+        __PROMPT_INIT=true
+    fi
+
     __PROMPT_COMMAND_NVM
 }
 
@@ -15,8 +20,9 @@ function __PROMPT_COMMAND_NVM()
     local nvmrc_node_version
 
     if [ -n "$nvmrc_path" ]; then
-        nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
+        __NVM_DIRTY=true
 
+        nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
         if [ "$nvmrc_node_version" = "N/A" ]; then
 
             # Install specificied NodeJS version
@@ -31,6 +37,9 @@ function __PROMPT_COMMAND_NVM()
         elif [ "$nvmrc_node_version" != "$node_version" ]; then
             nvm use
         fi
+    elif $__NVM_DIRTY; then
+        nvm use default
+        __NVM_DIRTY=false
     fi
 }
 
@@ -59,6 +68,7 @@ function configure_history()
 function start_powerline()
 {
     # PROMPT_COMMAND must be set before configuring Powerline
+    __PROMPT_INIT=false
     export PROMPT_COMMAND=__PROMPT_COMMAND
 
     command -v powerline-daemon >/dev/null 2>&1 || return
