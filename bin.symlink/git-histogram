@@ -3,6 +3,8 @@
 # Any file prefixed git- can be called using git [suffix]
 # git histogram
 
+set -eou pipefail
+
 function usage()
 {
   cat >&2 <<EOF
@@ -49,7 +51,6 @@ function main()
 	esac
 
 	author="$(git config user.name)"
-	echo "$author"
 	for seq_counter in $(seq $seq_top $((seq_step*-1)) 0)
 	do
 		git log \
@@ -58,7 +59,7 @@ function main()
 			--after="$((seq_counter+seq_step)) ${seq_name}" \
 			--format=oneline | \
 			wc -l;
-	done | spark | echo "$g_seq_period: $(cat -)"
+	done | spark | echo "("$g_seq_period"): $(cat -)"
 }
 
 command -v spark >/dev/null 2>&1 || {
