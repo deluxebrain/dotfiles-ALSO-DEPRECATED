@@ -190,7 +190,10 @@ function link_files()
   # -not -path: Exclude .git directory and contents
   # -o for or, -not for not
   # Complex logical expressions can be built up using escaped brackets
-  # Note use absolute path for find so that absolute paths are returned
+  # Note: Use absolute path for find so that absolute paths are returned
+  # Note: Dont use a pipe (e.g. for | read) else stdin will be tied up
+  # https://stackoverflow.com/questions/6883363/read-input-in-bash-inside-a-while-loop
+  # Using /dev/tty to get around this breaks over ssh (where no tty)
   for src in $(find -H "$(pwd)" \
     -maxdepth 3 \
     \( -name '*.symlink' -o -name '*.dotfile' -o -name '*.merge' -o -name '*.template' \) \
