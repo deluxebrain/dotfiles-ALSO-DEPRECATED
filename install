@@ -89,7 +89,6 @@ function parse_options()
     case $opt in
     p)
       g_run_provisioners=true
-      echo "*** PROVISION ***" >&2
       ;;
     h|*)
       usage; return
@@ -103,19 +102,9 @@ function main()
   local g_run_provisioners
   g_run_provisioners=false
 
-  echo "***" >&2
-  echo "$@" >&2
-  echo "***" >&2
-
   parse_options "$@" || return
   # strip parsed options ( up to -- )
   shift $(($OPTIND-1))
-
-  if g_run_provisioners; then
-    echo "*** WILL RUN PROVISIONERS" >&2
-  else
-    echo "*** WONT RUN PROVISIONERS" >&2
-  fi
 
   git submodule update --init --recursive >/dev/null 2>&1 || return
   git submodule foreach git checkout master >/dev/null 2>&1 || return
