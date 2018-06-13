@@ -24,7 +24,7 @@ if ! [ -f "$HOME/.ssh/id_rsa" ]; then
     -q || exit
   echo "Created default ssh keypair" >&2
 fi
-sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_rsa*"
+sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_rsa"
 
 # -rw-------
 chmod 600 "$HOME/.ssh/id_rsa" || exit
