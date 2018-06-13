@@ -97,7 +97,6 @@ function prompt_for_file_overwrite_action()
   IFS=$OFS
 
   # the prompt string for the select is taken from PS3
-  # NOTE pipe from tty incase stdin is already in use (e.g. while loop)
   PS3="File already exists $dst; what do you want todo? "
   select action in "${options[@]}"; do
     case "$action" in
@@ -110,7 +109,7 @@ function prompt_for_file_overwrite_action()
       "Exit") exit 1 ;;
       *) echo "ERROR: Invalid selection" >&2 ;;
     esac
-  done < /dev/tty
+  done
 }
 
 # Strategy functions
@@ -192,10 +191,10 @@ function link_files()
   # -o for or, -not for not
   # Complex logical expressions can be built up using escaped brackets
   # Note use absolute path for find so that absolute paths are returned
-  find -H "$(pwd)" -maxdepth 3 \
+  for src in $(find -H "$(pwd)" \
+    -maxdepth 3 \
     \( -name '*.symlink' -o -name '*.dotfile' -o -name '*.merge' -o -name '*.template' \) \
-    -not -path '*.git*' \
-    | while read -r src
+    -not -path '*.git*')
   do
     dst="$(form_link_path "$src")"
 
