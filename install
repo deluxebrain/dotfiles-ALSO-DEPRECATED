@@ -113,7 +113,7 @@ function main()
   # strip parsed options ( up to -- )
   shift $(($OPTIND-1))
 
-  if [ -n "$DOTFILES_VERSION" ] && ! g_force; then
+  if [ -n "$DOTFILES_VERSION" ] && ! $g_force; then
     echo "Dotfiles already installed" >&2
     echo "Use -f option to override" >&2
     false; return
