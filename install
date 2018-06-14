@@ -5,9 +5,11 @@ cd "$SCRIPT_PATH" || exit 1
 
 ACTUAL_USER="${SUDO_USER:-$USER}"
 
+# Guards
+
 if (( $(id -u) == 0 )); then
-  echo "This script must be run as the intended user"
-  echo "Please do not use sudo or su"
+  echo "This script must be run as the intended user" >&2
+  echo "Please do not use sudo or su" >&2
   exit 1
 fi
 
@@ -15,6 +17,7 @@ function usage()
 {
   cat >&2 <<EOF
 $(basename "$0") [OPTION] -- [OPTION]
+-f : force install over existing installation
 -p : run provisioners
 -h : help
 -- -f : force overwrite existing dotfiles
@@ -85,8 +88,11 @@ function install_packages()
 
 function parse_options()
 {
-  while getopts ":p" opt; do
+  while getopts ":fp" opt; do
     case $opt in
+    f)
+      g_force=true
+      ;;
     p)
       g_run_provisioners=true
       ;;
@@ -99,19 +105,26 @@ function parse_options()
 
 function main()
 {
-  local g_run_provisioners
+  local g_force g_run_provisioners
+  g_force=false
   g_run_provisioners=false
 
   parse_options "$@" || return
   # strip parsed options ( up to -- )
   shift $(($OPTIND-1))
 
+  if [ -n "$DOTFILES_VERSION" ] && ! g_force; then
+    echo "Dotfiles already installed" >&2
+    echo "Use -f option to override" >&2
+    false; return
+  fi
+
   git submodule update --init --recursive >/dev/null 2>&1 || return
   git submodule foreach git checkout master >/dev/null 2>&1 || return
-
-  ui || return
-
+  
   create_dotfiles_group || return
+  
+  ui || return  
 
   echo "INFO: Setting up dotfiles" >&2
   ./scripts/setup-dotfiles "$@" "dotfiles" || return
