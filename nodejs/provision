@@ -2,8 +2,12 @@
 
 source ~/.bash_profile
 
-# Install latest versions of most-used NodeJS versions
+# Install latest version of node
+nvm install node
+
+# Install specific named versions of node
 nvm install 8
 nvm install 10
 
-
+# Set the default version
+nvm alias default 10

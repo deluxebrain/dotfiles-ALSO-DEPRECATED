@@ -1,3 +1,5 @@
+#!/bin/bash
+
 shopt -s expand_aliases
 
 # Navigation
@@ -43,15 +45,8 @@ alias fif="grep -Rnw . -e"
 
 # Networking
 
-alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
-alias localip="ipconfig getifaddr en0"
-
-# Flush DNS cache
-alias flush="dscacheutil -flushcache && killall -HUP mDNSReponder"
-
-# View HTTP traffic
-alias sniff="sudo ngrep -d 'en1' -t '^(GET|POST) ' 'tcp and port 80'"
-alias httpdump="sudo tcpdump -i en1 -n -s 0 -w - | grep -a -o -E \"Host\: .*|GET \/.*\""
+# Get external ip address
+alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 
 # Run `dig` and display the most useful info
 alias digger="dig +nocmd any +multiline +noall +answer"

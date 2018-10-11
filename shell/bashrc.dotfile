@@ -1,6 +1,6 @@
-# ~/.bashrc: executed by bash for non-login shells ( e.g. terminal windows )
+#!/bin/bash
 
-# If not running interactively dont do anything
+# Only proceed if running interactively
 [[ "$-" == *i* ]] || return
 
 function __PROMPT_COMMAND()
@@ -9,37 +9,34 @@ function __PROMPT_COMMAND()
         __NVM_DIRTY=false
         __PROMPT_INIT=true
     fi
-
     __PROMPT_COMMAND_NVM
 }
 
+# Uses the nvm provided `nvm_find_nvmrc` function to find the .nvmrc file in scope
 function __PROMPT_COMMAND_NVM()
 {
-    local node_version="$(nvm version)"
     local nvmrc_path="$(nvm_find_nvmrc)"
-    local nvmrc_node_version
+    local node_version nvmrc_node_version
 
-    if [ -n "$nvmrc_path" ]; then
+    if [ -z "$nvmrc_path" ]; then
+        # Return early if no work todo
+        ! $__NVM_DIRTY && return
+        nvm use default
+        __NVM_DIRTY=false
+    else
+        # In a node project
         __NVM_DIRTY=true
-
+        node_version="$(nvm version)"
         nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
+
         if [ "$nvmrc_node_version" = "N/A" ]; then
-
-            # Install specificied NodeJS version
+            # Specificed node version does not exist
+            # Install and overwrite version in .nvmrc to prevent install retriggering
             nvm install
-
-            # Check if the specified version is more general than the installed
-            # Overwrite it if so to prevent install being triggered again
-            if [ "$(head -n1 "$nvmrc_path")" != "$(nvm version)" ]; then
-                echo "$(nvm version)" > "$nvmrc_path"
-            fi
-
+            echo "$(nvm version)" > "$nvmrc_path"
         elif [ "$nvmrc_node_version" != "$node_version" ]; then
             nvm use
         fi
-    elif $__NVM_DIRTY; then
-        nvm use default
-        __NVM_DIRTY=false
     fi
 }
 
@@ -48,8 +45,7 @@ function set_shelloptions()
     shopt -s expand_aliases
     shopt -s nocaseglob # case insensitive globbing
     shopt -s cdspell # autocorrect typos in path with using `cd`
-    # Perform recursive globbing on **
-    # e.g this:
+    # Perform recursive globbing on `**`, e.g:
     # find . -type f -name "*.py" -print0 | xargs -0 cat | wc -l
     # becomes this:
     # wc **/*.py -l
@@ -78,37 +74,6 @@ function start_powerline()
     source "/usr/share/powerline/bindings/bash/powerline.sh"
 }
 
-function configure_prompt()
-{
-    # set variable identifying the chroot you work in (used in the prompt below)
-    if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
-        debian_chroot=$(cat /etc/debian_chroot)
-    fi
-
-    # set a fancy prompt (non-color, unless we know we "want" color)
-    case "$TERM" in
-        xterm-color|*-256color) color_prompt=yes;;
-    esac
-
-    # uncomment for a colored prompt, if the terminal has the capability
-    #force_color_prompt=yes
-
-    if [ -n "$force_color_prompt" ]; then
-        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-            # We have color support; assume it's compliant with Ecma-48
-            color_prompt=yes
-        else
-            color_prompt=
-        fi
-    fi
-
-    if [ "$color_prompt" = yes ]; then
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
-    fi
-}
-
 function start_completions()
 {
     # enable programmable completion features (you don't need to enable
@@ -125,7 +90,7 @@ function start_completions()
 
 set_shelloptions
 configure_history
-start_powerline || configure_prompt
+start_powerline
 start_completions
 
 # Aliases

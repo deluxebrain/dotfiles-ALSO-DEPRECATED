@@ -1,6 +1,21 @@
 # @deluxebrain does dotfiles
 
-TODO this all needs re-writing and updating
+## Prerequisites
+
+### Host ssh keypair
+
+The host machine requires an ssh keypair to be setup. This can either be a keypair specific to this project or the re-use of an existing one.
+
+This keypair will be used to connect to guest machines, as well as being re-used on the guest machines themselves for ssh client connectivity via ssh-agent forwarding.
+
+Note that vagrant does not support keys generated using the `Ed25519` algorithm, so stick with something like this:
+
+```sh
+ssh-keygen -a 100 -o -t rsa -b 4096 -f ~/.ssh/id_rsa
+```
+
+
+
 
 NOTES:
 
