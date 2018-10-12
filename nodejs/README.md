@@ -2,14 +2,15 @@
 
 ## NVM development workflow
 
-Note that the `nvm use` step has been automated in the shell dotfiles through integration with the `PROMPT_COMMAND`. This causes the node version specified in the project `.nvmrc` file to be activated on entering the project directory.
+Note that the `nvm use` step has been automated in the shell dotfiles through integration with the `PROMPT_COMMAND`. 
+This causes the node version specified in the project `.nvmrc` file to be activated on entering the project directory.
 
 ```sh
 # Create and enter project directory
 mkdir my_project && cd $_
 
-# Create a project nvm file specifying the desired version
-echo "8" > .nvmrc
+# Create a project nvm file specifying the desired VERSION
+echo [VERSION] > .nvmrc
 
 # Activate the node version
 nvm use

@@ -3,16 +3,8 @@
 # Only proceed if running interactively
 [[ "$-" == *i* ]] || return
 
-function __PROMPT_COMMAND()
-{
-    if ! $__PROMPT_INIT; then
-        __NVM_DIRTY=false
-        __PROMPT_INIT=true
-    fi
-    __PROMPT_COMMAND_NVM
-}
-
 # Uses the nvm provided `nvm_find_nvmrc` function to find the .nvmrc file in scope
+__NVM_DIRTY=false
 function __PROMPT_COMMAND_NVM()
 {
     local nvmrc_path="$(nvm_find_nvmrc)"
@@ -27,13 +19,10 @@ function __PROMPT_COMMAND_NVM()
         # In a node project
         __NVM_DIRTY=true
         node_version="$(nvm version)"
-        nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
-
+        nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"        
         if [ "$nvmrc_node_version" = "N/A" ]; then
-            # Specificed node version does not exist
-            # Install and overwrite version in .nvmrc to prevent install retriggering
-            nvm install
-            echo "$(nvm version)" > "$nvmrc_path"
+            # Specificed node version is not installed locally     
+            nvm install            
         elif [ "$nvmrc_node_version" != "$node_version" ]; then
             nvm use
         fi
@@ -63,10 +52,8 @@ function configure_history()
 
 function start_powerline()
 {
-    # PROMPT_COMMAND must be set before configuring Powerline
-    __PROMPT_INIT=false
-    export PROMPT_COMMAND=__PROMPT_COMMAND
-
+    # PROMPT_COMMAND must be set before configuring Powerline    
+    export PROMPT_COMMAND=__PROMPT_COMMAND_NVM
     command -v powerline-daemon >/dev/null 2>&1 || return
     powerline-daemon -q
     export POWERLINE_BASH_CONTINUATION=1
@@ -75,10 +62,7 @@ function start_powerline()
 }
 
 function start_completions()
-{
-    # enable programmable completion features (you don't need to enable
-    # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
-    # sources /etc/bash.bashrc).
+{    
     if ! shopt -oq posix; then
         if [ -f /usr/share/bash-completion/bash_completion ]; then
             . /usr/share/bash-completion/bash_completion
