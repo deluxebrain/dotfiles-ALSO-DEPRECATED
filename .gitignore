@@ -11,7 +11,5 @@ boxes/*
 jupyter.dotfile/migrated
 
 # xdg compliant config
-config.dotfile/configstore/*
-config.dotfile/matplotlib/*
-config.dotfile/pyenv/*
-config.dotfile/nvm/*
+config.dotfile/*
+!config.dotfile/powerline
