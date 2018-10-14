@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source ~/.bash_profile
+# Start nvm
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
 # Install latest version of node
 nvm install node
@@ -10,4 +11,4 @@ nvm install 8
 nvm install 10
 
 # Set the default version
-nvm alias default 10
+nvm alias default node

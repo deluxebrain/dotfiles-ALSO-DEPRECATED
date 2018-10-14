@@ -10,8 +10,8 @@ boxes/*
 # Jupyter
 jupyter.dotfile/migrated
 
-# Random stuff that gets dumped in .config
+# xdg compliant config
 config.dotfile/configstore/*
 config.dotfile/matplotlib/*
-
-
+config.dotfile/pyenv/*
+config.dotfile/nvm/*

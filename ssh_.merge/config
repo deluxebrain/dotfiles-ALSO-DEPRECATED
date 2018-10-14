@@ -1,15 +1,2 @@
-Host github.com
-  User git
-  Hostname github.com
-  PreferredAuthentications publickey
-  IdentitiesOnly yes
-  IdentityFile ~/.ssh/id_rsa
+Include config.d/*
 
-# Example git host setup for non-default keypair
-# $ git clone git@nondefault-github:user/repos
-Host nondefault-github
-  User git
-  Hostname github.com
-  PreferredAuthentications publickey
-  IdentitiesOnly yes
-  IdentityFile ~/.ssh/id_rsa

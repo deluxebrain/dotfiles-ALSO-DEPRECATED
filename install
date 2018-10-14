@@ -121,13 +121,16 @@ function main()
 
   git submodule update --init --recursive >/dev/null 2>&1 || return
   git submodule foreach git checkout master >/dev/null 2>&1 || return
-  
+
   create_dotfiles_group || return
-  
-  ui || return  
+
+  ui || return
 
   echo "INFO: Setting up dotfiles" >&2
   ./scripts/setup-dotfiles "$@" "dotfiles" || return
+
+  echo "INFO: Reloading environment" >&2
+  source ~/.bash_profile
 
   echo "INFO: Running all installers" >&2
   ./scripts/setup-installers "install" || return
@@ -135,15 +138,12 @@ function main()
   echo "INFO: Installing packages" >&2
   install_packages || return
 
-  echo "INFO: Reloading environment" >&2
-  source ~/.bash_profile
-
   if $g_run_provisioners; then
     echo "INFO: Running all provisioners" >&2
     ./scripts/setup-installers "provision" || return
   fi
 
-  echo "*** PLEASE RELOAD ENVIRONMENT ***"
+  echo "*** PLEASE RELOAD ENVIRONMENT ***" >&2
 }
 
 # Ask for sudo password upfront

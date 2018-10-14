@@ -5,49 +5,90 @@ function usage()
   cat <<EOF
 Usage $0 [install, versions, distributions] [distribution]
 EOF
-
   return 1
 }
 
-function get_latest_version()
+# pyenv install --list
+# \tDISTRIBUTION-VERSION
+# Note CPython is represented by a blank distribution name
+# e.g.
+#   3.7.0
+#   miniconda3-4.3.30
+
+RE_DISTRIBUTION="((.*)-)?"
+RE_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"
+# captures: raw, _, distribution, version
+RE_PYENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
+
+function error_if_empty()
 {
-    pyenv install --list \
-    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3,\4,\1/p' \
-    | sort -k1V \
-    | awk -F"," -v distribution="$1" '$1==distribution {print $3}' \
-    | tail -n1 \
-    | awk 'END { if (NR != 0) { print; exit 0 } else { exit 1 }}'
+    awk 'END { if (NR != 0) { print; exit 0 } else { exit 1 }}' \
+        < /dev/stdin
 }
 
-function versions()
+function filter_versions()
 {
-    pyenv install --list \
-    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3,\4,\1/p' \
-    | sort -k1V \
-    | awk -F"," -v distribution="$1" '$1==distribution {print $3}'
+    local distribution="$1"
+
+    # sed returns: raw, distribution, version
+    sed -nr "${RE_PYENV}/\1,\3,\4/p" \
+        | awk -F"," -v x="$distribution" '$2==x {print $3}' \
+        | sort -V \
+        < /dev/stdin
 }
 
-function distributions()
+function filter_distributions()
 {
-    pyenv install --list \
-    | sed -n 's/^[ \t]*\(\(\(.*\)-\)\?\([0-9]*\.[0-9]*\.[0-9]*\)\)$/\3/p' \
-    | sed 's/^$/python/' \
-    | sort \
-    | uniq
+    # sed returns: distribution
+    # cpython defaults to blank distribution name so fix that up
+    sed -nr "${RE_PYENV}/\3/p" \
+        | sed 's/^$/cpython/' \
+        | sort \
+        | uniq \
+        < /dev/stdin
 }
 
-function install()
+function available_distributions()
 {
-    local name="$1"
+    pyenv install --list | filter_distributions
+}
+
+function installed_distributions()
+{
+    pyenv versions | filter_distributions
+}
+
+function available_versions()
+{
+    pyenv install --list | filter_versions "$1"
+}
+
+function installed_versions()
+{
+    pyenv versions | filter_versions "$1"
+}
+
+function latest_available_version()
+{
+    available_versions "$1" | tail -n1 | error_if_empty
+}
+
+function latest_installed_version()
+{
+    installed_versions "$1" | tail -n1 | error_if_empty
+}
+
+function install_lastest_version()
+{
     local version
 
-    version="$(get_latest_version "$name")"
+    version="$(latest_available_version "$1")"
     if (( $? != 0 )); then
-        echo "ERROR: Distribution $name not found" >&2
+        echo "ERROR: Distribution $1 not found" >&2
         false; return
     fi
 
-    echo "INFO: Installing $version" >&2
+    echo "INFO: Installing $version of distribution $1" >&2
     if ! pyenv install "$version"; then
         echo "ERROR: Installation of $version failed" >&2
         false; return
@@ -67,3 +108,6 @@ distributions) distributions "$@";;
 *) usage; exit;;
 esac
 
+pyenv-wrapper install --distribution "" --latest
+pyenv-wrapper versions --all --latest
+pyenv-wrapper distributions -all --latest

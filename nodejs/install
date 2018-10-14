@@ -19,5 +19,5 @@ tar -xzf "$TMPDIR/nvm.tar.gz" --directory "$TMPDIR/nvm"
 # Create a tmp shell dotfile and point the install script PROFILE
 # variable at it to prevent the installer writing into the users shell dotfiles
 touch "$TMPDIR/.profile"
-find "$TMPDIR/nvm" -name "install.sh" \
-| PROFILE="$TMPDIR/.profile" bash >/dev/null
+[ ! -d "$NVM_DIR" ] && mkdir -p "$NVM_DIR" >/dev/null
+find "$TMPDIR/nvm" -name "install.sh" | PROFILE="$TMPDIR/.profile" bash >/dev/null

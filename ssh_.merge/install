@@ -11,22 +11,31 @@ if [[ -z "$GIT_USEREMAIL" ]]; then
 fi
 
 # drwx------
-if ! chmod 700 "$HOME/.ssh"; then
+if ! chmod 700 "$HOME/.ssh" "$HOME/.ssh/config.d" ; then
     echo "ERROR: Unable to set file permissions on ssh directory" >&2
     false; exit
 fi
 
-if ! [ -f "$HOME/.ssh/id_rsa" ]; then
-  ssh-keygen -t rsa \
-    -f "$HOME/.ssh/id_rsa" \
+# -rw-r--r--
+if ! chmod 644 "$HOME/.ssh/config" "$HOME/.ssh/config.d/"* ; then
+    echo "ERROR: Unable to set file permissions on ssh config" >&2
+    false; exit
+fi
+
+if ! [ -f "$HOME/.ssh/id_ed25519_default" ]; then
+    echo "Creating default ssh keypair ..." >&2
+    ssh-keygen -t ed25519 \
+    -o \
+    -a 100 \
+    -f "$HOME/.ssh/id_ed25519_default" \
     -C "$GIT_USEREMAIL" \
     -N "" \
     -q || exit
-  echo "Created default ssh keypair" >&2
 fi
-sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_rsa"
+sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_ed25519_default"
 
 # -rw-------
-chmod 600 "$HOME/.ssh/id_rsa" || exit
+chmod 600 "$HOME/.ssh/id_ed25519_default" || exit
+
 # -rw-r--r--
-chmod 644 "$HOME/.ssh/id_rsa.pub" || exit
+chmod 644 "$HOME/.ssh/id_ed25519_default.pub" || exit

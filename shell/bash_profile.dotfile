@@ -1,27 +1,7 @@
 #!/bin/bash
 
+export DOTFILES_VERSION="1.0"
+
 # Bring in the .bashrc
 [[ -n "$BASH_VERSION" && -f "$HOME/.bashrc" ]] && . "$HOME/.bashrc"
 
-# Exports
-export DOTFILES_VERSION="1.0"
-export NVM_DIR="$HOME/.nvm"
-export PYENV_ROOT="$HOME/.pyenv"
-export XDG_CONFIG_HOME="$HOME/.config"  # Powerline
-
-# Path
-[ -d "$HOME/bin" ] && PATH="$HOME/bin:$PATH"
-# Used for python packages when using pip --user
-[ -d "$HOME/.local/bin" ] && PATH="$HOME/.local/bin:$PATH"
-[ -d "$HOME/.pyenv" ] && PATH="$PYENV_ROOT/bin:$PATH"
-
-# Start nvm
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-
-# Start pyenv / pyenv-virtualwrapper
-# Note this should be at the end of .profile (or equivalent)
-# See: https://github.com/pyenv/pyenv/issues/264
-command -v pyenv >/dev/null 2>&1 && eval "$(pyenv init -)"
-pyenv virtualenv --version >/dev/null 2>&1 && \
-    eval "$(pyenv virtualenv-init -)"
