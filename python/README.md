@@ -29,6 +29,19 @@ These tools are used to solve the following problems associated with Python deve
 
 ## Python management
 
+pyenv local VERSION
+writes down .python-version file
+
+
+
+
+
+
+
+
+
+
+
 ### Native pyenv commands
 
 ```sh

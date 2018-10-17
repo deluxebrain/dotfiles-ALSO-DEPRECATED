@@ -25,12 +25,12 @@ fi
 if ! [ -f "$HOME/.ssh/id_ed25519_default" ]; then
     echo "Creating default ssh keypair ..." >&2
     ssh-keygen -t ed25519 \
-    -o \
-    -a 100 \
-    -f "$HOME/.ssh/id_ed25519_default" \
-    -C "$GIT_USEREMAIL" \
-    -N "" \
-    -q || exit
+        -o \
+        -a 100 \
+        -f "$HOME/.ssh/id_ed25519_default" \
+        -C "$GIT_USEREMAIL" \
+        -N "" \
+        -q || exit
 fi
 sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_ed25519_default"
 

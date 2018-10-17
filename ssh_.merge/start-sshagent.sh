@@ -24,4 +24,4 @@ echo "Starting new SSH agent ..." >&2
 ssh-agent > "$SSH_ENV"
 chmod 600 "$SSH_ENV"
 source "$SSH_ENV" >/dev/null
-ssh-add >/dev/null
+ssh-add "$HOME/.ssh/id_ed25519_default" >/dev/null

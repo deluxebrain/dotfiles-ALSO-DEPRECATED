@@ -1,24 +1,58 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-function usage()
-{
-  cat <<EOF
-Usage $0 [install, versions, distributions] [distribution]
-EOF
-  return 1
-}
+SCRIPT_NAME=`basename ${BASH_SOURCE[0]}`
 
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
+
+# Regexs used to parse PyEnv responses. E.g,
 # pyenv install --list
 # \tDISTRIBUTION-VERSION
-# Note CPython is represented by a blank distribution name
-# e.g.
+# Note CPython is represented by a blank distribution name. E.g,
 #   3.7.0
 #   miniconda3-4.3.30
-
 RE_DISTRIBUTION="((.*)-)?"
 RE_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"
 # captures: raw, _, distribution, version
 RE_PYENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
+
+function usage()
+{
+  cat <<EOF
+    usage: $SCRIPT_NAME [-a|--all] [-d|--distribution=<${UNDERLINE}distribution${_UNDERLINE}>]
+                        [-h|--help] [-l|--latest]
+                        [-v|--version=<${UNDERLINE}version${_UNDERLINE}>]
+                        <command> [<args>]
+
+    ${BOLD}OPTIONS${_BOLD}
+        -a|--all
+            Include remote results. Defaults filtering by results installed locally.
+        -d|--distribution
+            Filter results to specified ${UNDERLINE}distribution${_UNDERLINE}.
+            Defaults to CPython.
+        -h|--help
+            Display this help information
+        -l|--lastest
+            Filter results to latest for specified distribution.
+        -v|--version
+            Semantic ${UNDERLINE}version${_UNDERLINE} template in form <major>.<minor>.<patch>.
+            Supports wildcards, e.g. 3.1.* will filter to lastest 3.1 release
+
+    ${BOLD}COMMANDS${_BOLD}
+
+    List information about available Python versions
+        ver|versions                Available versions
+        dist|distributions          Availble distributions
+
+    Python installation
+        install                     Install Python version
+
+    Meta
+        help                        Display this help information
+
+EOF
+}
 
 function error_if_empty()
 {
@@ -48,34 +82,21 @@ function filter_distributions()
         < /dev/stdin
 }
 
-function available_distributions()
+function list_distributions()
 {
-    pyenv install --list | filter_distributions
+    echo "Listing distributions $TXT_FROM"
+
+    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
+        | filter_distributions
 }
 
-function installed_distributions()
+function list_versions()
 {
-    pyenv versions | filter_distributions
-}
+    echo "Listing $TXT_VER of $TXT_DIST distribution $TXT_FROM"
 
-function available_versions()
-{
-    pyenv install --list | filter_versions "$1"
-}
-
-function installed_versions()
-{
-    pyenv versions | filter_versions "$1"
-}
-
-function latest_available_version()
-{
-    available_versions "$1" | tail -n1 | error_if_empty
-}
-
-function latest_installed_version()
-{
-    installed_versions "$1" | tail -n1 | error_if_empty
+    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
+        | filter_versions "$DISTRIBUTION" \
+        | ( $ARG_LATEST && tail -n 1 || cat )
 }
 
 function install_lastest_version()
@@ -95,19 +116,52 @@ function install_lastest_version()
     fi
 }
 
-ACTION="$1"; shift
-if [ -z "$ACTION" ]; then
-  usage
-  exit
+ARG_ALL=false ; ARG_DISTRIBUTION=false ; ARG_LATEST=false; ARG_VERSION=false
+DISTRIBUTION= ; VERSION= ; ACTION=
+
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with optional arg, opt:: --> option with mandatory arg
+if ! OPTS=`getopt -q -o ad:lv: --long all,distribution:,latest,version: -- "$@"`; then
+    usage ; exit
 fi
 
-case "$ACTION" in
-install) install "$@";;
-versions) versions "$@";;
-distributions) distributions "$@";;
-*) usage; exit;;
-esac
+eval set -- "$OPTS"
 
-pyenv-wrapper install --distribution "" --latest
-pyenv-wrapper versions --all --latest
-pyenv-wrapper distributions -all --latest
+while true ; do
+    case "$1" in
+        -a|--all) ARG_ALL=true; shift ;;
+        -d|--distribution)
+            case "$2" in
+                "") usage ; exit 1 ;;
+                *) ARG_DISTRIBUTION=true ; DISTRIBUTION="$2" ; shift 2 ;;
+            esac ;;
+        -h|--help) usage ; exit ;;
+        -l|--latest) ARG_LATEST=true; shift ;;
+        -v|--version)
+            case "$2" in
+                "") usage ; exit 1 ;;
+                *) ARG_VERSION=true ; VERSION="$2" ; shift 2 ;;
+            esac ;;
+        --) shift ; break ;;
+        *) usage ; exit 1 ;;
+    esac
+done
+
+if ! (( $# == 1 )); then
+    usage ; exit
+fi
+
+COMMAND="$1" ; shift
+
+$ARG_LATEST && TXT_VER="${BOLD}latest version${_BOLD}" || TXT_VER="${BOLD}all versions${_BOLD}"
+$ARG_DISTRIBUTION && TXT_DIST="${BOLD}${DISTRIBUTION}${_BOLD}" || TXT_DIST="${BOLD}CPython${_BOLD}"
+$ARG_ALL && TXT_FROM="${BOLD}available remotely${_BOLD}" || TXT_FROM="${BOLD}installed locally${_BOLD}"
+
+case "$COMMAND" in
+    ver|versions) list_versions ;;
+    dist|distributions) list_distributions ;;
+    install) ;;
+    help) usage ; exit ;;
+    *) usage ; exit 1 ;;
+esac
