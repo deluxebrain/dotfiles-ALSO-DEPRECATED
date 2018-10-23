@@ -2,19 +2,27 @@
 
 SCRIPT_NAME=`basename ${BASH_SOURCE[0]}`
 
+# Globals
+ARG_ALL=false               # ARG_ALL ? remote : local
+ARG_DISTRIBUTION=false      # distribution filter specified ?
+DISTRIBUTION=               # distribution filter
+ARG_LATEST=false            # ARG_LATEST ? only latest : all
+ARG_VERSION=false           # version filter specified ?
+VERSION=                    # version filter
+
 # Console formatting
 BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
 UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
 
 # Regexs used to parse PyEnv responses. E.g,
 # pyenv install --list
-# \tDISTRIBUTION-VERSION
+# (stdout) \tDISTRIBUTION-VERSION
 # Note CPython is represented by a blank distribution name. E.g,
 #   3.7.0
 #   miniconda3-4.3.30
 RE_DISTRIBUTION="((.*)-)?"
 RE_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"
-# captures: raw, _, distribution, version
+# groups: raw, _, distribution, version
 RE_PYENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
 
 function usage()
@@ -37,7 +45,8 @@ function usage()
             Filter results to latest for specified distribution.
         -v|--version
             Semantic ${UNDERLINE}version${_UNDERLINE} template in form <major>.<minor>.<patch>.
-            Supports wildcards, e.g. 3.1.* will filter to lastest 3.1 release
+            Supports wildcards, e.g. 3.1.* will filter to lastest 3.1 release.
+            Defaults to wildcard filter "*.*.*"
 
     ${BOLD}COMMANDS${_BOLD}
 
@@ -54,26 +63,47 @@ function usage()
 EOF
 }
 
+# Identity function that returns 1 if passed an empty list
+# Arguments: (stdin) _
+# Returns:
+#   (stdout) _
+#   1: Empty list
 function error_if_empty()
 {
-    awk 'END { if (NR != 0) { print; exit 0 } else { exit 1 }}' \
-        < /dev/stdin
+    awk '{ print } END { if (NR == 0) { exit 1 }}' < /dev/stdin
 }
 
-function filter_versions()
+# Identity function
+# Arguments: (stdin) _
+# Returns:
+#   (stdout) _
+function identity()
 {
-    local distribution="$1"
+    cat < /dev/stdin
+}
 
-    # sed returns: raw, distribution, version
+# Filters PyEnv versions list by distribution
+# Arguments:
+#   (stdin) \tDISTRIBUTION-VERSION
+# Globals:
+#   DISTRIBUTION
+# Returns: (stdout) versions (asc)
+function filter_by_distribution()
+{
+    # groups: raw, distribution, version
     sed -nr "${RE_PYENV}/\1,\3,\4/p" \
-        | awk -F"," -v x="$distribution" '$2==x {print $3}' \
+        | awk -F"," -v x="$DISTRIBUTION" '$2==x {print $3}' \
         | sort -V \
         < /dev/stdin
 }
 
-function filter_distributions()
+# Filters PyEnv versions list to get unique list of distributions
+# Arguments:
+#   (stdin) \tDISTRIBUTION-VERSION
+# Returns: (stdout) distributions (asc)
+function extract_distributions()
 {
-    # sed returns: distribution
+    # groups: distribution
     # cpython defaults to blank distribution name so fix that up
     sed -nr "${RE_PYENV}/\3/p" \
         | sed 's/^$/cpython/' \
@@ -82,42 +112,104 @@ function filter_distributions()
         < /dev/stdin
 }
 
-function list_distributions()
+# Filters PyEnv versions list by version specification
+# Arguments:
+#   (stdin) \tDISTRIBUTION-VERSION
+# Globals:
+#   VERSION
+# Returns: (stdout) versions (asc)
+function filter_by_version()
 {
-    echo "Listing distributions $TXT_FROM"
+    local version_pattern
+    local -a version_parts
 
-    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
-        | filter_distributions
+    # replace * with [[:digit:]] ( * needs escaping to prevent globbing )
+    version_pattern="${VERSION//\*/[[:digit:]]}"
+
+    # split version into parts array on IFS
+    version_parts=( ${version_pattern//./ } )
+
+    # -o: only display matched text (i.e. the version)
+    grep -o "${version_parts[0]}.${version_parts[1]}.${version_parts[2]}" \
+        | sort -V \
+        < /dev/stdin
 }
 
-function list_versions()
+# Lists all Python versions available, defaulting to CPython
+# Globals:
+#   ARG_ALL
+#   ARG_LATEST
+#   DISTRIBUTION
+# Returns:
+#   (stdout) versions (asc)
+#   1: no versions available
+function CMD_versions()
 {
-    echo "Listing $TXT_VER of $TXT_DIST distribution $TXT_FROM"
+    echo "Listing $TXT_LATEST of $TXT_DIST distribution $TXT_FROM" \
+        "`$ARG_VERSION && echo "matching version specification $TXT_VERSION"`" \
+        >&2
 
     ( $ARG_ALL && pyenv install --list || pyenv versions ) \
-        | filter_versions "$DISTRIBUTION" \
-        | ( $ARG_LATEST && tail -n 1 || cat )
+        | filter_by_distribution \
+        | ( $ARG_VERSION && filter_by_version || identity ) \
+        | ( $ARG_LATEST && tail -n 1 || identity ) \
+        | error_if_empty
+
+    if ! (( $? == 0 )); then
+        echo "No versions of $TXT_DIST distribution $TXT_FROM" >&2; false
+    fi
 }
 
-function install_lastest_version()
+# Lists all Python distributions available
+# Globals:
+#   ARG_ALL
+# Returns:
+#   (stdout) distributions (asc)
+#   1: no distributions available
+function CMD_distributions()
+{
+    echo "Listing distributions $TXT_FROM" >&2
+
+    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
+        | extract_distributions \
+        | error_if_empty
+
+    if ! (( $? == 0 )); then
+        echo "No distributions $TXT_FROM" >&2; false
+    fi
+}
+
+# Installs specified Python version
+# Globals:
+#   ARG_VERSION
+#   ARG_DISTRIBUTION
+# Returns:
+#   1: no matching Python version available
+function CMD_install()
 {
     local version
 
-    version="$(latest_available_version "$1")"
-    if (( $? != 0 )); then
-        echo "ERROR: Distribution $1 not found" >&2
+    echo "Determining latest version of $TXT_DIST" \
+        "`$ARG_VERSION && echo "matching version spec $TXT_VERSION"`" >&2
+
+    if ! version="`pyenv install --list \
+        | filter_by_distribution \
+        | ( $ARG_VERSION && filter_by_version || identity ) \
+        | tail -n 1 \
+        | error_if_empty`"; then
+        echo "No versions of $TXT_DIST distribution available to install" >&2
         false; return
     fi
 
-    echo "INFO: Installing $version of distribution $1" >&2
-    if ! pyenv install "$version"; then
-        echo "ERROR: Installation of $version failed" >&2
+    echo "Installing ${BOLD}${version}${_BOLD} of $TXT_DIST" >&2
+
+    return
+
+    if ! pyenv install "$version" >&2; then
+        echo "ERROR: Installation of $version of $TXT_DIST failed" >&2
         false; return
     fi
 }
-
-ARG_ALL=false ; ARG_DISTRIBUTION=false ; ARG_LATEST=false; ARG_VERSION=false
-DISTRIBUTION= ; VERSION= ; ACTION=
 
 # -o short options, --long long options
 # -q manual error handling
@@ -140,8 +232,9 @@ while true ; do
         -l|--latest) ARG_LATEST=true; shift ;;
         -v|--version)
             case "$2" in
-                "") usage ; exit 1 ;;
-                *) ARG_VERSION=true ; VERSION="$2" ; shift 2 ;;
+                [0-9\*].[0-9\*].[0-9\*])
+                    ARG_VERSION=true ; VERSION="$2" ; shift 2 ;;
+                *) usage ; exit 1 ;;
             esac ;;
         --) shift ; break ;;
         *) usage ; exit 1 ;;
@@ -154,14 +247,20 @@ fi
 
 COMMAND="$1" ; shift
 
-$ARG_LATEST && TXT_VER="${BOLD}latest version${_BOLD}" || TXT_VER="${BOLD}all versions${_BOLD}"
-$ARG_DISTRIBUTION && TXT_DIST="${BOLD}${DISTRIBUTION}${_BOLD}" || TXT_DIST="${BOLD}CPython${_BOLD}"
-$ARG_ALL && TXT_FROM="${BOLD}available remotely${_BOLD}" || TXT_FROM="${BOLD}installed locally${_BOLD}"
+# Strings used by CLI stdout
+$ARG_LATEST && TXT_LATEST="${BOLD}latest version${_BOLD}" \
+    || TXT_LATEST="${BOLD}all versions${_BOLD}"
+$ARG_DISTRIBUTION && TXT_DIST="${BOLD}${DISTRIBUTION}${_BOLD}" \
+    || TXT_DIST="${BOLD}CPython${_BOLD}"
+$ARG_ALL && TXT_FROM="${BOLD}available remotely${_BOLD}" \
+    || TXT_FROM="${BOLD}installed locally${_BOLD}"
+$ARG_VERSION && TXT_VERSION="${BOLD}${VERSION}${_BOLD}" \
+    || TXT_VERSION="${BOLD}*.*.*${_BOLD}"
 
 case "$COMMAND" in
-    ver|versions) list_versions ;;
-    dist|distributions) list_distributions ;;
-    install) ;;
+    ver|versions) CMD_versions ;;
+    dist|distributions) CMD_distributions ;;
+    install) CMD_install ;;
     help) usage ; exit ;;
     *) usage ; exit 1 ;;
 esac
