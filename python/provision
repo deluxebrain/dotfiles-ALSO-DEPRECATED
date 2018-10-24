@@ -12,7 +12,7 @@ pyenv-wrapper -d miniconda3 install
 # Create virtualenv for global Python and packages
 # using the latest available Python 3
 pyenv virtualenv \
-    `pyenv-wrapper -l -v 3.*.* 2>/dev/null` \
+    `pyenv-wrapper -l -v 3.*.* versions 2>/dev/null` \
     global
 
 # Install base packages into the new global virtualenv
