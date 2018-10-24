@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SCRIPT_NAME=`basename ${BASH_SOURCE[0]}`
+SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
 
 # Globals
 ARG_ALL=false               # ARG_ALL ? remote : local
