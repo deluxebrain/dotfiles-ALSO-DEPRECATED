@@ -5,17 +5,14 @@ command -v pyenv >/dev/null 2>&1 && eval "$(pyenv init -)"
 pyenv virtualenv --version >/dev/null 2>&1 && \
     eval "$(pyenv virtualenv-init -)"
 
-# Install latest CPython and miniconda distributions
-pyenv-wrapper install
-pyenv-wrapper install miniconda3
+# Install latest Python3 and miniconda3 distributions
+pyenv-wrapper -v 3.*.* install
+pyenv-wrapper -d miniconda3 install
 
 # Create virtualenv for global Python and packages
 # using the latest available Python 3
 pyenv virtualenv \
-    `pyenv whence 2to3 \
-    | grep -e "^3" \
-    | sort -k1Vr \
-    | head` \
+    `pyenv-wrapper -l -v 3.*.* 2>/dev/null` \
     global
 
 # Install base packages into the new global virtualenv

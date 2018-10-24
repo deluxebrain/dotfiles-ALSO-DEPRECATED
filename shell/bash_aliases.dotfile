@@ -56,20 +56,17 @@ alias lsp='sudo lsof -i -n -P | grep LISTEN'
 
 # Python
 
-# pyi [DISTRIBUTION]: Install lastest version of DISTRIBUTION
+# pyi <distribution> - intall lastest version of distribution
 alias pyi="pyenv-wrapper install"
 
-# pydv [DISTRIBUTION]: List DISTRIBUTION versions
-alias pydv="pyenv-wrapper versions"
+# List all distributions
+alias pyd="pyenv-wrapper --all distributions"
 
-# pyd [DISTRIBUTION]: List distributions
-alias pyd="pyenv-wrapper distributions"
+# pyv <distribution> - list all versions of distribution
+alias pyv="pyenv-wrapper --all versions"
 
-# pyl [PYTHON]: Set local python version
-alias pyl="pyenv local"
-
-# pyv: List installed python versions
-alias pyv="pyenv versions"
+# pyl <distribution> - list latest installed version of distribution
+alias pyv="pyenv-wrapper --latest versions"
 
 # pipenv
 alias prp="pipenv run python"

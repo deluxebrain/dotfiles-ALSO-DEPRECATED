@@ -203,8 +203,6 @@ function CMD_install()
 
     echo "Installing ${BOLD}${version}${_BOLD} of $TXT_DIST" >&2
 
-    return
-
     if ! pyenv install "$version" >&2; then
         echo "ERROR: Installation of $version of $TXT_DIST failed" >&2
         false; return
