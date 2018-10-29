@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eou pipefail
+
 [ ! -d "$PYENV_ROOT" ] && mkdir -p "$PYENV_ROOT" >/dev/null
 
 # pyenv

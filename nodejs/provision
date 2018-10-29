@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Start nvm
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+source "$XDG_CONFIG_HOME/dotfiles/bash_nvm.sh"
 
 # Install latest version of node
 nvm install node

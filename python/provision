@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Starting pyenv
-command -v pyenv >/dev/null 2>&1 && eval "$(pyenv init -)"
-pyenv virtualenv --version >/dev/null 2>&1 && \
-    eval "$(pyenv virtualenv-init -)"
+source "$XDG_CONFIG_HOME/dotfiles/bash_pyenv.sh"
 
 # Install latest Python3 and miniconda3 distributions
 pyenv-wrapper -v 3.*.* install

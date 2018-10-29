@@ -1,0 +1,18 @@
+c#!/usr/bin/env bash
+
+function foo()
+{
+    local idx file
+
+    local -ra FILES=(
+        "BAZ"
+        "BAR"
+    )
+
+    # "${name[@]}"
+    # expand array keys into separate words
+    for idx in "${!FILES[@]}"; do
+        file="${FILES[$idx]}"
+        [ ! -f "$file" ] && { source "$file" || return ; }
+    done
+}
