@@ -11,24 +11,20 @@ HISTFILESIZE=10000
 # Make vim the default editor
 export EDITOR="vim"
 
-# Language preferences
-# LANG sets the locale in the absence of LC_ALL
-export LANG="en-GB.UTF-8"
-
 # Dont clear the screen after quitting a man page
 export MANPAGER="less -X"
 
+# NodeJS
+# nvm
+export NVM_DIR="$HOME/.nvm"
 # Increase NODE repl history
 export NODE_REPL_HISTORY_SIZE=10000
 
-# Set Python to use UTF-8 encoding for stdout/stdin/stderr
-export PYTHONIOENCODING="UTF-8"
-
-# nvm
-export NVM_DIR="$HOME/.nvm"
-
+# Python
 # PyEnv
 export PYENV_ROOT="$HOME/.pyenv"
+# Set Python to use UTF-8 encoding for stdout/stdin/stderr
+export PYTHONIOENCODING="UTF-8"
 
 # Path
 PATH="$HOME/bin:$PATH"
