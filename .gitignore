@@ -12,4 +12,6 @@ jupyter.dotfile/migrated
 
 # xdg compliant config
 config.dotfile/*
+!config.dotfile/README.md
 !config.dotfile/powerline
+!config.dotfile/dotfiles
