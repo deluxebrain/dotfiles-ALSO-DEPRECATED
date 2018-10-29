@@ -2,6 +2,8 @@
 
 set -eou pipefail
 
+echo "Installing PyEnv" >&2
+
 [ ! -d "$PYENV_ROOT" ] && mkdir -p "$PYENV_ROOT" >/dev/null
 
 # pyenv

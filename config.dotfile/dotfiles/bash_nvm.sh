@@ -1,5 +1,3 @@
-export NVM_DIR="$HOME/.nvm"
-
 # PROMPT_COMMAND must be set before configuring Powerline
 export PROMPT_COMMAND=__PROMPT_COMMAND_NVM
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Provisioning Python environment" >&2
+
 source "$XDG_CONFIG_HOME/dotfiles/bash_pyenv.sh"
 
 # Install latest Python3 and miniconda3 distributions

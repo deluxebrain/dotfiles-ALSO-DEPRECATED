@@ -2,6 +2,8 @@
 
 set -eou pipefail
 
+echo "Installing nvm" >&2
+
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
@@ -9,7 +11,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 curl -s https://api.github.com/repos/creationix/nvm/releases/latest \
     | grep "tarball_url" \
     | cut -d '"' -f 4 \
-    | xargs -n1 wget -q -O "$TMPDIR/nvm.tar.gz"
+    | xargs -n1 wget -O "$TMPDIR/nvm.tar.gz"
 
 # Unzip the latest release
 mkdir "$TMPDIR/nvm"
