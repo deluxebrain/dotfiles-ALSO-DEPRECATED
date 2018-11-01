@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ -z "$GIT_USERNAME" ]]; then
-    echo "ERROR: Git user name is not set" >&2
+if [[ -z "$VAR_USER_NAME" ]]; then
+    echo "ERROR: user name variable is not set" >&2
     false; exit
 fi
 
-if [[ -z "$GIT_USEREMAIL" ]]; then
-    echo "ERROR: Git user email is not set" >&2
+if [[ -z "$VAR_EMAIL_ADDRESS" ]]; then
+    echo "ERROR: email address variable is not set" >&2
     false; exit
 fi
-
-

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
-
 # Globals
 ARG_ALL=false               # ARG_ALL ? remote : local
 ARG_DISTRIBUTION=false      # distribution filter specified ?
@@ -9,10 +7,6 @@ DISTRIBUTION=               # distribution filter
 ARG_LATEST=false            # ARG_LATEST ? only latest : all
 ARG_VERSION=false           # version filter specified ?
 VERSION=                    # version filter
-
-# Console formatting
-BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
-UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
 
 # Regexs used to parse PyEnv responses. E.g,
 # pyenv install --list
@@ -25,8 +19,13 @@ RE_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"
 # groups: raw, _, distribution, version
 RE_PYENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
 
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
+
 function usage()
 {
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
   cat <<EOF
     usage: $SCRIPT_NAME [-a|--all] [-d|--distribution=<${UNDERLINE}distribution${_UNDERLINE}>]
                         [-h|--help] [-l|--latest]
@@ -64,9 +63,10 @@ EOF
 }
 
 # Identity function that returns 1 if passed an empty list
-# Arguments: (stdin) _
+# Arguments: 
+#   stdin: _
 # Returns:
-#   (stdout) _
+#   stdout: _
 #   1: Empty list
 function error_if_empty()
 {
@@ -74,9 +74,10 @@ function error_if_empty()
 }
 
 # Identity function
-# Arguments: (stdin) _
+# Arguments:
+#   stdin: _
 # Returns:
-#   (stdout) _
+#   stdout: _
 function identity()
 {
     cat < /dev/stdin
@@ -84,10 +85,11 @@ function identity()
 
 # Filters PyEnv versions list by distribution
 # Arguments:
-#   (stdin) \tDISTRIBUTION-VERSION
+#   stdin: \tDISTRIBUTION-VERSION
 # Globals:
 #   DISTRIBUTION
-# Returns: (stdout) versions (asc)
+# Returns:
+#   stdout: versions (asc)
 function filter_by_distribution()
 {
     # groups: raw, distribution, version
@@ -99,8 +101,9 @@ function filter_by_distribution()
 
 # Filters PyEnv versions list to get unique list of distributions
 # Arguments:
-#   (stdin) \tDISTRIBUTION-VERSION
-# Returns: (stdout) distributions (asc)
+#   stdin: \tDISTRIBUTION-VERSION
+# Returns:
+#   stdout: distributions (asc)
 function extract_distributions()
 {
     # groups: distribution
@@ -114,10 +117,11 @@ function extract_distributions()
 
 # Filters PyEnv versions list by version specification
 # Arguments:
-#   (stdin) \tDISTRIBUTION-VERSION
+#   stdin: \tDISTRIBUTION-VERSION
 # Globals:
 #   VERSION
-# Returns: (stdout) versions (asc)
+# Returns:
+#   stdout: versions (asc)
 function filter_by_version()
 {
     local version_pattern
@@ -141,7 +145,7 @@ function filter_by_version()
 #   ARG_LATEST
 #   DISTRIBUTION
 # Returns:
-#   (stdout) versions (asc)
+#   stdout: versions (asc)
 #   1: no versions available
 function CMD_versions()
 {
@@ -164,7 +168,7 @@ function CMD_versions()
 # Globals:
 #   ARG_ALL
 # Returns:
-#   (stdout) distributions (asc)
+#   stdout: distributions (asc)
 #   1: no distributions available
 function CMD_distributions()
 {
@@ -211,7 +215,7 @@ function CMD_install()
 
 # -o short options, --long long options
 # -q manual error handling
-# opt --> flag, opt: --> option with optional arg, opt:: --> option with mandatory arg
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
 if ! OPTS=`getopt -q -o ad:lv: --long all,distribution:,latest,version: -- "$@"`; then
     usage ; exit
 fi
@@ -220,10 +224,9 @@ eval set -- "$OPTS"
 
 while true ; do
     case "$1" in
-        -a|--all) ARG_ALL=true; shift ;;
+        -a|--all) ARG_ALL=true ; shift ;;
         -d|--distribution)
-            case "$2" in
-                "") usage ; exit 1 ;;
+            case "$2" in                
                 *) ARG_DISTRIBUTION=true ; DISTRIBUTION="$2" ; shift 2 ;;
             esac ;;
         -h|--help) usage ; exit ;;

@@ -1,4 +1,3 @@
 [user]
-name = \""$GIT_USERNAME"\"
-email = \""$GIT_USEREMAIL"\"
-
+name = \""$VAR_USER_NAME"\"
+email = \""$VAR_EMAIL_ADDRESS"\"

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+PROMPTS=(
+    "FOO,this is a test 1"
+    "BAR,this is a test 2"
+    "BAZ,this is a test 3"
+)
+
+BAR=foobar
+
+function user_confirm()
+(
+    while ! [[ $REPLY =~ ^[yYnN]$ ]]; do
+        read -r -p "$1? (y/n): "
+    done
+    [[ $REPLY =~ ^[yY]$ ]]
+)
+
+function user_question()
+(
+    while [ -z "${REPLY// /}" ]; do
+        read -r -p "$1: "
+    done
+    echo "$REPLY"
+)
+
+function arse()
+{   
+    local response
+
+    while true; do
+        response=`user_question "$1"`
+        user_confirm "$response" && break
+    done
+
+    echo "$response"
+}
+
+for idx in "${!PROMPTS[@]}"; do
+    RAW="${PROMPTS[$idx]}"
+    IFS=','
+    PROMPT=($RAW)
+    VAR="${PROMPT[0]}"
+
+    
+    # ${!ref}
+    # Use indirection to reference variable by name in a separate variable
+    if [ -z "${!VAR}" ]; then
+        QUESTION="${PROMPT[1]}"
+        # use `read` to dynamically set variable based on its name
+        read $VAR <<<"`arse "$QUESTION"`"
+    fi
+done

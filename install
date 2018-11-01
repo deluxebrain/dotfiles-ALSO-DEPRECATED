@@ -1,154 +1,258 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
 cd "`dirname "${BASH_SOURCE[0]}"`" || exit
 
-DOTFILES_CONFIG_HOME="$HOME/.config/dotfiles"
-ACTUAL_USER="${SUDO_USER:-$USER}"
-
-# Guards
-
+# Guard clauses
 if (( $(id -u) == 0 )); then
   echo "This script must be run as the intended user" >&2
   echo "Please do not use sudo or su" >&2
   exit 1
 fi
 
+# Globals
+DOTFILES_CONFIG_HOME="$HOME/.config/dotfiles"
+DOTFILES_GROUP="dotfiles"
+ARG_FORCE=false       # allow install over existing
+ARG_OPTION=backup     # overwrite | backup | skip
+ARG_PROVISION=true    # run provisioners
+
+# Variables that may be used by child scripts
+export VAR_EMAIL_ADDRESS=
+export VAR_USER_NAME=
+
+# User prompts
+# GLOBAL_VAR (ref),question
+PROMPTS=(
+  "VAR_EMAIL_ADDRESS,Please enter your email address"
+  "VAR_USER_NAME,Please enter your user name"
+)
+
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
+
 function usage()
 {
-  cat >&2 <<EOF
-$(basename "$0") [OPTION] -- [OPTION]
--f : force install over existing installation
--p : run provisioners
--h : help
--- -f : force overwrite existing dotfiles
--- -b : backup existing dotfiles
--- -s : skip existing dotfiles
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
+  cat <<EOF
+    usage: $SCRIPT_NAME [-f|--force]
+                        [-o|--option <${UNDERLINE}option${_UNDERLINE}>]
+                        [-p|--provision[<${UNDERLINE}boolean${_UNDERLINE}>]]
+                        [-v|--var <${UNDERLINE}name=value${_UNDERLINE}>]
+                        [-h|--help]
+                        <command> [<args>]
+
+    ${BOLD}OPTIONS${_BOLD}
+        -f|--force
+            Allow install over existing installation
+        -o|--option
+            File handling option for existing files.
+            Defaults to ${BOLD}backup${_BOLD}
+            Valid options are:
+              ${BOLD}overwrite${_BOLD} existing
+              ${BOLD}backup${_BOLD} existing
+              ${BOLD}skip${_BOLD} existing
+        -p|--provision
+            Run provisioners after installers have completed.
+            Defaults to true
+        -v|--var
+            Comma separated list of variables expressed as name/value pairs.
+            Valid variables are:
+              ${BOLD}email.address${_BOLD}
+              ${BOLD}user.name{_BOLD}
+        -h|--help
+            Display this help information
+
+    ${BOLD}COMMANDS${_BOLD}
+
+    Meta
+        ${BOLD}help${_BOLD}   Display this help information
 EOF
-  false
 }
 
-function strip_whitespace()
+# Prompt user for (non-blank) response
+# Arguments:
+#   $1: User message
+# Returns:
+#   stdout: User response
+function prompt()
 {
-  echo "${1// }"
-}
-
-function user_pause()
-{
-  read -r -p "Hit enter to continue "
-}
-
-function user_prompt()
-{
-  echo >&2
-  while [ -z "$(strip_whitespace $REPLY)" ]; do
+  # Loop until non-blank response
+  # ${name// /} replace all whitespace with empty string
+  while [ -z "${REPLY// /}" ]; do
     read -r -p "$1: "
   done
   echo "$REPLY"
 }
 
-function user_confirm()
-{
-  echo >&2
-  while [[ ! $REPLY =~ ^[YyNn]$ ]]; do
-    read -r -p "$1 (y/n) "
+# Prompt for confirmation (y,Y,n,N)
+# Arguments:
+#   $1: User response to confirm
+# Returns:
+#   0: User confirmed
+#   1: User not confirmed
+function confirm()
+(
+  # Loop until y/n answer given
+  while ! [[ $REPLY =~ ^[yYnN]$ ]]; do 
+    read -r -p "$1? (y/n):"
   done
-  [[ $REPLY =~ ^[Yy$ ]]
+  [[ $REPLY =~ ^[yY]$ ]]
+)
+
+# Wrapper function to loop until user has supplied confirmed response
+# Arguments:
+#   $1: User message
+# Returns:
+#   stdout: User response
+function prompt_and_confirm()
+(
+  local response 
+
+  # Loop until response has been given and confirmed
+  while true; do
+    response="`prompt "$1"`"
+    confirm "$response" && break
+  done
+
+  echo "$response"
+)
+
+# Grouping function for misc activities not directly relating
+# to dotfiles installation
+# Arguments:
+# Returns:
+function init()
+{
+  # Ask for sudo permissions upfront
+  sudo -v
+
+  # Initialize all submodules
+  git submodule update --init --recursive >/dev/null 2>&1 || return
+  git submodule foreach git checkout master >/dev/null 2>&1 || return
 }
 
-function ui()
+# Prompt user for values for confirmation that has not been
+# explicitly set by user provided options
+# Arguments:
+# Returns:
+function get_user_config()
 {
-  export GIT_USERNAME
-  export GIT_USEREMAIL
+  # "${!name[@]}"
+  # expand array keys into separate words  
+  for idx in "${!PROMPTS[@]}"; do
+    IFS=','; prompt=(${PROMPTS[$idx]})
+    prompt_var="${prompt[0]}"
 
-  if [[ -n "$(git config --global --includes user.name)" && \
-    -n "$(git config --global --includes user.email)" ]]; then
-    GIT_USERNAME="$(git config --global --includes user.name)"
-    GIT_USEREMAIL="$(git config --global --includes user.email)"
-  else
-    GIT_USERNAME="$(user_prompt "Enter git user name")"
-    GIT_USEREMAIL="$(user_prompt "Enter git email")"
-  fi
-}
-
-function create_dotfiles_group()
-{
-  grep -q -F dotfiles /etc/group \
-    || sudo groupadd dotfiles \
-    || return
-
-  sudo usermod -a -G dotfiles "$ACTUAL_USER"
-}
-
-function install_packages()
-{
-  ./packages/common-packages || return
-  ./packages/apt-packages || return
-  ./packages/python-packages || return
-}
-
-function parse_options()
-{
-  while getopts ":fp" opt; do
-    case $opt in
-    f)
-      g_force=true
-      ;;
-    p)
-      g_run_provisioners=true
-      ;;
-    h|*)
-      usage; return
-      ;;
-    esac
+    # Check if variable has been set
+    # ${!ref}
+    # Use indirection to reference variable by name in a separate variable    
+    if [ -z "${!prompt_var}" ]; then
+      prompt_msg="${prompt[1]}"
+      # use `read` to dynamically set variable based on its name
+      read $prompt_var <<< "$(prompt_and_confirm "$prompt_msg")"
+    fi     
   done
 }
 
+# Main
+# Arguments:
+# Returns:
 function main()
 {
-  local g_force g_run_provisioners
-  g_force=false
-  g_run_provisioners=false
+  local idx prompt prompt_var prompt_msg file
 
-  parse_options "$@" || return
-  # strip parsed options ( up to -- )
-  shift $(($OPTIND-1))
-
-  if [ -n "$DOTFILES_VERSION" ] && ! $g_force; then
+  if [ -n "$DOTFILES_VERSION" ] && ! $ARG_FORCE; then
     echo "Dotfiles already installed" >&2
     echo "Use -f option to override" >&2
     false; return
   fi
 
-  git submodule update --init --recursive >/dev/null 2>&1 || return
-  git submodule foreach git checkout master >/dev/null 2>&1 || return
+  # Administrative activities not directly relating to installation
+  # init || return
 
-  create_dotfiles_group || return
+  # Get all user configuration that has not been explicitly set by options
+  get_user_config || return
 
-  ui || return
+  # Create dotfiles group and add current user to it
+  if ! grep -q -F dotfiles /etc/group; then
+    sudo groupadd "$DOTFILES_GROUP" || return
+  fi
+  sudo usermod -a -G "$DOTFILES_GROUP" "$USER"
 
-  echo "INFO: Setting up dotfiles" >&2
-  ./scripts/setup-dotfiles "$@" "dotfiles" || return
+  # Install dotfiles
+  ./scripts/setup-dotfiles \
+    -o "$ARG_OPTION" \
+    -g "$DOTFILES_GROUP" || return
 
-  echo "INFO: Loading environment" >&2
-  source "$DOTFILES_CONFIG_HOME/bash_exports.sh"
+  # Load bare minimum environment required by installers / provisioners
+  source "$DOTFILES_CONFIG_HOME/bash_exports.sh" || return
 
-  echo "INFO: Running all installers" >&2
+  # Run installers
   ./scripts/setup-installers "install" || return
 
-  echo "INFO: Installing packages" >&2
-  install_packages || return
+  # Install packages
+  find ../packages -type f -printf "%f\n" \
+    | sort \
+    | while read file; do
+      "./packages/${file}" || return
+    done
 
-  if $g_run_provisioners; then
-    echo "INFO: Running all provisioners" >&2
+  # Run provisioners
+  if $ARG_PROVISION; then
     ./scripts/setup-installers "provision" || return
   fi
-
-  echo "*** PLEASE RELOAD ENVIRONMENT ***" >&2
 }
 
-# Ask for sudo password upfront
-sudo -v
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
+if ! OPTS=`getopt -q -o fo:p::v:h --long force,option:,provision::,var:,help -- "$@"`; then
+    usage ; exit
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in
+    -f|--force) ARG_FORCE=true ; shift ;;
+    -o|--option)
+      case "$2" in
+        "overwrite") ARG_OPTION=overwrite ; shift 2 ;;
+        "backup") ARG_OPTION=backup ; shift 2 ;;
+        "skip") ARG_OPTION=skip ; shift 2 ;;
+        *) usage ; exit 1 ;;
+      esac ;;
+    -p|--option)
+      case "$2" in
+        "true"|"") ARG_PROVISION=true ; shift 2 ;;
+        "false") ARG_PROVISION=false ; shift 2 ;;
+        *) usage ; exit 1 ;;
+      esac ;;
+    -v|--var)
+      IFS=','; VARS=($2)
+      for IDX in "${!VARS[@]}"; do
+        IFS='='; VAR=(${VARS[$IDX]})
+        case "${VAR[0]}" in
+          "email.address") VAR_EMAIL_ADDRESS="${VAR[1]}" ;;
+          "user.name") VAR_USER_NAME="${VAR[1]}" ;;
+          *) usage ; exit 1 ;;
+        esac
+      done
+      shift 2 ;;
+    -h|help) usage ; exit ;;
+    --) shift ; break ;;
+    *) usage ; exit 1 ;;
+  esac
+done
+
+COMMAND="$1" ; shift
+
+case "$COMMAND" in
+  help) usage ; exit ;;
+  "") : ;;
+  *) usage ; exit 1 ;;
+esac
 
 main "$@"
 exit $?
