@@ -5,26 +5,18 @@
 
 export DOTFILES_CONFIG_HOME="$HOME/.config/dotfiles"
 
+# Source all files in the dotfiles directory in filename order
+# Arguments:
+# Returns:
 function source_bash_files()
 {
-    local idx bash_file
-    local -a BASH_FILES=(
-        "$DOTFILES_CONFIG_HOME/bash_options.sh"
-        "$DOTFILES_CONFIG_HOME/bash_exports.sh"
-        "$DOTFILES_CONFIG_HOME/bash_aliases.sh"
-        "$DOTFILES_CONFIG_HOME/bash_ssh-agent.sh"
-        "$DOTFILES_CONFIG_HOME/bash_nvm.sh"
-        "$DOTFILES_CONFIG_HOME/bash_pyenv.sh"
-        "$DOTFILES_CONFIG_HOME/bash_powerline.sh"        
-        "$DOTFILES_CONFIG_HOME/bash_completions.sh"
-    )
-
-    # "${!name[@]}"
-    # expand array keys into separate words
-    for idx in "${!BASH_FILES[@]}"; do
-        bash_file="${BASH_FILES[$idx]}"
-        [ -f "$bash_file" ] && { source "$bash_file" || return; }
-    done
+    local file
+    
+    find "$DOTFILES_CONFIG_HOME" -type f -printf "%f\n" \
+        | sort \
+        | while read file; do
+            source "$DOTFILES_CONFIG_HOME/$file" || return
+        done    
 }
 
 source_bash_files

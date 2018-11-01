@@ -17,13 +17,13 @@ ARG_OPTION=backup     # overwrite | backup | skip
 ARG_PROVISION=true    # run provisioners
 
 # Variables that may be used by child scripts
-export VAR_EMAIL_ADDRESS=
+export VAR_USER_EMAIL=
 export VAR_USER_NAME=
 
 # User prompts
 # GLOBAL_VAR (ref),question
 PROMPTS=(
-  "VAR_EMAIL_ADDRESS,Please enter your email address"
+  "VAR_USER_EMAIL,Please enter your email address"
   "VAR_USER_NAME,Please enter your user name"
 )
 
@@ -234,7 +234,7 @@ while true; do
       for IDX in "${!VARS[@]}"; do
         IFS='='; VAR=(${VARS[$IDX]})
         case "${VAR[0]}" in
-          "email.address") VAR_EMAIL_ADDRESS="${VAR[1]}" ;;
+          "user.email") VAR_USER_EMAIL="${VAR[1]}" ;;
           "user.name") VAR_USER_NAME="${VAR[1]}" ;;
           *) usage ; exit 1 ;;
         esac
