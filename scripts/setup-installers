@@ -1,72 +1,127 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_PATH" || exit 1
+cd "`dirname "${BASH_SOURCE[0]}"`" || exit
+
+# Globals
+GIT_ROOT        # project git root directory
+ARG_ACTION      # install | provision
+
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
 
 function usage()
 {
-  cat >&2 <<EOF
-$(basename "$0") installer
-installer : filename of installer file to run
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
+  cat <<EOF
+    usage: $SCRIPT_NAME [-h|--help]
+                        <command> [<args>]
+
+    ${BOLD}OPTIONS${_BOLD}       
+        -h|--help
+            Display this help information
+
+    ${BOLD}COMMANDS${_BOLD}
+
+    Actions
+      install                 Run `install` files
+      provision               Run `provision` files
+
+    Meta
+        ${BOLD}help${_BOLD}   Display this help information
 EOF
-  false
 }
 
+# Determine root git directory within current directory location
+# Arguments:
+# Returns:
+#   stdout: Root git folder
+#   1: Not a git repository
 function git_root()
 {
-  git rev-parse --show-toplevel
+  git rev-parse --show-toplevel 2>/dev/null || false; return
 }
 
+# Determines if specified directory is a git submodule
+# Arguments:
+#   $1: Specified directory
+# Returns:
+#   0: Specified directory is a git submodule
+#   1: Specified directory is not a git submodule
 function dir_is_submodule()
 (
-  local git_root
+  local dir_git_root
 
   cd "$1" || return
-  git_root="$(git_root)" || return
-  ! [ "$g_git_root" = "$git_root" ]
+  dir_git_root="$(git_root)" || return
+  ! [ "$GIT_ROOT" = "$dir_git_root" ]
 )
 
+# Run all installers matching the specified action
+# Arguments:
+# Returns:
 function find_and_run_installers()
 {
   local installer
 
+  # Start looking from the project root git directory
+  GIT_ROOT="$(git_root)" || return
+  cd "$GIT_ROOT" || return
+
   # mindepth: only search subdirectories
-  # exclude subdirectories ending with #
-  # exclude subdirectories that are git submodules
+  # exclude subdirectories ending with #  
   find . \
     -mindepth 2 \
     -maxdepth 3 \
-    -name "$g_installer" \
+    -name "$ARG_ACTION" \
     -not -path '*#/*' | \
     while read -r installer; do
-      if dir_is_submodule "$(dirname "$installer")"; then
-        echo "INFO: Ignoring installer $installer in submodule" >&2
-        continue
-      fi
-      echo "INFO: Found installer $installer" >&2
+    
+      # exclude subdirectories that are git submodules
+      dir_is_submodule "$(dirname "$installer")" && continue
+      
+      echo "Running installer $installer" >&2
       # redirect stdin to prevent while loop breaking early
       # "$installer" </dev/null
-      "$installer"
-      if (( $? != 0)); then
+      if ! "$installer" ; then 
         echo "ERROR: Unexpected error running installer $installer" >&2
         false; return
       fi
     done
 }
 
+# Main
+# Arguments:
+# Returns:
 function main()
-{
-  local g_installer
-  local g_git_root
-
-  g_installer="$1"
-  [ -n "$g_installer" ] || { usage; return; }
-
-  g_git_root="$(git_root)" || return
-  cd "$g_git_root" || return
-
+{  
   find_and_run_installers || return
 }
+
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
+if ! OPTS=`getopt -q -o h --help -- "$@"`; then
+    usage ; exit
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in   
+    -h|help) usage ; exit ;;
+    --) shift ; break ;;
+    *) usage ; exit 1 ;;
+  esac
+done
+
+COMMAND="$1" ; shift
+
+case "$COMMAND" in
+  install|provision) ARG_ACTION="$COMMAND" ;;
+  help) usage ; exit ;; 
+  *) usage ; exit 1 ;;
+esac
 
 main "$@"
 exit $?

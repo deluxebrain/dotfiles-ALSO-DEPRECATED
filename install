@@ -169,7 +169,7 @@ function main()
   fi
 
   # Administrative activities not directly relating to installation
-  # init || return
+  init || return
 
   # Get all user configuration that has not been explicitly set by options
   get_user_config || return
@@ -186,17 +186,17 @@ function main()
     -g "$DOTFILES_GROUP" || return
 
   # Load bare minimum environment required by installers / provisioners
-  source "$DOTFILES_CONFIG_HOME/bash_exports.sh" || return
-
-  # Run installers
-  ./scripts/setup-installers "install" || return
+  source "$DOTFILES_CONFIG_HOME/20_bash_exports.sh" || return
 
   # Install packages
   find ../packages -type f -printf "%f\n" \
     | sort \
     | while read file; do
       "./packages/${file}" || return
-    done
+    done  
+
+  # Run installers
+  ./scripts/setup-installers "install" || return
 
   # Run provisioners
   if $ARG_PROVISION; then

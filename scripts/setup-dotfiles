@@ -1,28 +1,52 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_PATH" || exit 1
+cd "`dirname "${BASH_SOURCE[0]}"`" || exit
 
+# Globals
 ACTUAL_USER="${SUDO_USER:-$USER}"
+ARG_GROUP="dotfiles"        # default group
+ARG_BACKUP_ALL=true
+ARG_OVERWRITE_ALL=false
+ARG_SKIP_ALL=false
+
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
 
 function usage()
 {
-  cat >&2 <<EOF
-$(basename "$0") [OPTION] groupname
-groupname : name of group to for dotfile file ownership
--f : force overwrite existing dotfiles
--b : backup existing dotfiles
--s : skip existing dotfiles
--h : help
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
+  cat <<EOF
+    usage: $SCRIPT_NAME [-g|--group <${UNDERLINE}group${_UNDERLINE}>]
+                        [-o|--option <${UNDERLINE}option${_UNDERLINE}>]                       
+                        [-h|--help]
+                        <command> [<args>]
+
+    ${BOLD}OPTIONS${_BOLD}
+        -g|--group
+            Group to set as owner of dotfile files            
+        -o|--option
+            File handling option for existing files.
+            Defaults to ${BOLD}backup${_BOLD}
+            Valid options are:
+              ${BOLD}overwrite${_BOLD} existing
+              ${BOLD}backup${_BOLD} existing
+              ${BOLD}skip${_BOLD} existing       
+        -h|--help
+            Display this help information
+
+    ${BOLD}COMMANDS${_BOLD}
+
+    Meta
+        ${BOLD}help${_BOLD}   Display this help information
 EOF
-  false
 }
 
 # Utility functions
 
 function get_group()
 {
-  echo "${g_group:-ACTUAL_USER}"
+  echo "${ARG_GROUP:-ACTUAL_USER}"
 }
 
 function set_file_permissions()
@@ -101,11 +125,11 @@ function prompt_for_file_overwrite_action()
   select action in "${options[@]}"; do
     case "$action" in
       Overwrite) g_overwrite=true; break ;;
-      "Overwrite all") g_overwrite_all=true; break ;;
+      "Overwrite all") ARG_OVERWRITE_ALL=true; break ;;
       Backup) g_backup=true; break ;;
-      "Backup all") g_backup_all=true; break ;;
+      "Backup all") ARG_BACKUP_ALL=true; break ;;
       Skip) g_skip=true; break ;;
-      "Skip all") g_skip_all=true; break ;;
+      "Skip all") ARG_SKIP_ALL=true; break ;;
       "Exit") exit 1 ;;
       *) echo "ERROR: Invalid selection" >&2 ;;
     esac
@@ -120,7 +144,7 @@ function destination_exists_strategy()
   src="$1"; dst="$2"
   link_type="$(get_link_type "$src")"
 
-  if $g_overwrite_all || $g_backup_all || $g_skip_all; then
+  if $ARG_OVERWRITE_ALL || $ARG_BACKUP_ALL || $ARG_SKIP_ALL; then
     # global strategy in place - no more action required
     return
   fi
@@ -151,8 +175,8 @@ function form_filename()
   # foo.bar becomes foo
   # foo_.bar becomes .foo
   echo "$(basename "$1")" \
-  | sed "s/^\(.\+\)_\.\(.\+\)/.\1.\2/" \
-  | sed "s/^\(.\+\)\.\(.\+\)/\1/"
+    | sed "s/^\(.\+\)_\.\(.\+\)/.\1.\2/" \
+    | sed "s/^\(.\+\)\.\(.\+\)/\1/"
 }
 
 function form_link_path()
@@ -222,12 +246,12 @@ function check_for_and_handle_existing_file()
   if path_exists "$dst"; then
     destination_exists_strategy "$src" "$dst"
 
-    if $g_overwrite_all || $g_overwrite; then
+    if $ARG_OVERWRITE_ALL || $g_overwrite; then
       if ! rm -rf "$dst"; then
         echo "ERROR: Unable to delete $dst" >&2
         false; return
       fi
-    elif $g_backup_all || $g_backup; then
+    elif $ARG_BACKUP_ALL || $g_backup; then
       backup_path="$(form_backup_path "$dst")"
       # -L to unlink any symlinks so we get a hard backup
       # -p to preserve file permissions
@@ -235,7 +259,7 @@ function check_for_and_handle_existing_file()
       if (( $? != 0 )); then
         echo "ERROR: Unable to backup $dst to $backup_path" >&2
       fi
-    elif $g_skip_all || $g_skip; then
+    elif $ARG_SKIP_ALL || $g_skip; then
       return
     fi
   fi
@@ -246,7 +270,7 @@ function link_file()
   local src dst link_type
   src="$1"; dst="$2"
 
-  if $g_skip_all || $g_skip; then
+  if $ARG_SKIP_ALL || $g_skip; then
     return
   fi
 
@@ -294,57 +318,47 @@ function link_file()
 
 # Entry point
 
-function parse_options()
-{
-  local opt opt_set
-  opt_set=false
-
-  # e.g. fA:x
-  # expect flag -f, argument -A, flag -x
-  # if very first character is : then  use silent error reporting
-  while getopts ":fbsh" opt; do
-    case $opt in
-    f)
-      $opt_set && { usage; return; }
-      opt_set=true; g_overwrite_all=true
-      ;;
-    b)
-      $opt_set && { usage; return; }
-      opt_set=true; g_backup_all=true
-      ;;
-    s)
-      $opt_set && { usage; return; }
-      opt_set=true; g_skip_all=true
-      ;;
-    h|*)
-      usage; return
-      ;;
-    esac
-  done
-
-  # strip parsed options ( up to -- )
-  shift $(($OPTIND-1))
-
-  g_group="$1"
-  [ -n "$g_group" ] || { usage; return; }
-}
-
 function main()
-{
-  local g_overwrite_all g_backup_all g_skip_all
-  local g_group
-  g_overwrite_all=false
-  g_backup_all=false
-  g_skip_all=false
-
-  parse_options "$@" || return
-
+{   
   # Change into the root git directory for the current script
   cd "$(get_git_root_dir)" || return
 
   # Run the file linker
   link_files || return
 }
+
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
+if ! OPTS=`getopt -q -o g:o:h --long group:,option:,help -- "$@"`; then
+    usage ; exit
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in    
+    -g|--group) ARG_GROUP="$2" ;;
+    -o|--option)
+      case "$2" in
+        "overwrite") ARG_OVERWRITE_ALL=true ; shift 2 ;;
+        "backup") ARG_BACKUP_ALL=true ; shift 2 ;;
+        "skip") ARG_SKIP_ALL_false ; shift 2 ;;
+        *) usage ; exit 1 ;;
+      esac ;;   
+    -h|help) usage ; exit ;;
+    --) shift ; break ;;
+    *) usage ; exit 1 ;;
+  esac
+done
+
+COMMAND="$1" ; shift
+
+case "$COMMAND" in
+  help) usage ; exit ;;
+  "") : ;;
+  *) usage ; exit 1 ;;
+esac
 
 main "$@"
 exit $?
