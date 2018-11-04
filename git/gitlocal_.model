@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 if [[ -z "$VAR_USER_NAME" ]]; then
-    echo "ERROR: user name variable is not set" >&2
+    echo "ERROR: User name variable is not set" >&2
     false; exit
 fi
 
-if [[ -z "$VAR_EMAIL_ADDRESS" ]]; then
-    echo "ERROR: email address variable is not set" >&2
+if [[ -z "$VAR_USER_EMAIL" ]]; then
+    echo "ERROR: User email variable is not set" >&2
     false; exit
 fi

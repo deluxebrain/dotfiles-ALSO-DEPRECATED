@@ -3,8 +3,8 @@
 cd "`dirname "${BASH_SOURCE[0]}"`" || exit
 
 # Globals
-GIT_ROOT        # project git root directory
-ARG_ACTION      # install | provision
+GIT_ROOT=         # project git root directory
+ARG_ACTION=       # install | provision
 
 # Console formatting
 BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
@@ -24,8 +24,8 @@ function usage()
     ${BOLD}COMMANDS${_BOLD}
 
     Actions
-      install                 Run `install` files
-      provision               Run `provision` files
+      install                 Run ${UNDERLINE}install${_UNDERLINE} files
+      provision               Run ${UNDERLINE}provision${_UNDERLINE} files
 
     Meta
         ${BOLD}help${_BOLD}   Display this help information
@@ -101,7 +101,7 @@ function main()
 # -o short options, --long long options
 # -q manual error handling
 # opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
-if ! OPTS=`getopt -q -o h --help -- "$@"`; then
+if ! OPTS=`getopt -q -o h --long help -- "$@"`; then
     usage ; exit
 fi
 

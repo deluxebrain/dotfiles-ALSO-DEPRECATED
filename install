@@ -17,14 +17,14 @@ ARG_OPTION=backup     # overwrite | backup | skip
 ARG_PROVISION=true    # run provisioners
 
 # Variables that may be used by child scripts
-export VAR_USER_EMAIL=
 export VAR_USER_NAME=
+export VAR_USER_EMAIL=
 
 # User prompts
 # GLOBAL_VAR (ref),question
-PROMPTS=(
-  "VAR_USER_EMAIL,Please enter your email address"
+PROMPTS=(  
   "VAR_USER_NAME,Please enter your user name"
+  "VAR_USER_EMAIL,Please enter your email address"
 )
 
 # Console formatting
@@ -138,20 +138,23 @@ function init()
 # Returns:
 function get_user_config()
 {
+  local idx prompt prompt_var_ref prompt_message
   # "${!name[@]}"
   # expand array keys into separate words  
   for idx in "${!PROMPTS[@]}"; do
     IFS=','; prompt=(${PROMPTS[$idx]})
-    prompt_var="${prompt[0]}"
+    prompt_var_ref="${prompt[0]}"
 
     # Check if variable has been set
     # ${!ref}
     # Use indirection to reference variable by name in a separate variable    
-    if [ -z "${!prompt_var}" ]; then
+    if [ -z "${!prompt_var_ref}" ]; then
       prompt_msg="${prompt[1]}"
       # use `read` to dynamically set variable based on its name
-      read $prompt_var <<< "$(prompt_and_confirm "$prompt_msg")"
-    fi     
+      read $prompt_var_ref <<< "$(prompt_and_confirm "$prompt_msg")"
+    else
+      echo "Using configuration: ${!prompt_var_ref}" >&2
+    fi
   done
 }
 
@@ -169,37 +172,46 @@ function main()
   fi
 
   # Administrative activities not directly relating to installation
+  echo "Initializing installation" >&2  
   init || return
 
   # Get all user configuration that has not been explicitly set by options
+  echo "Gathering installation configuration" >&2
   get_user_config || return
 
   # Create dotfiles group and add current user to it
   if ! grep -q -F dotfiles /etc/group; then
+    echo "Creating group $DOTFILES_GROUP to own all dotfile files" >&2
     sudo groupadd "$DOTFILES_GROUP" || return
   fi
   sudo usermod -a -G "$DOTFILES_GROUP" "$USER"
 
   # Install dotfiles
+  echo "Installing dotfiles" >&2
   ./scripts/setup-dotfiles \
     -o "$ARG_OPTION" \
     -g "$DOTFILES_GROUP" || return
 
   # Load bare minimum environment required by installers / provisioners
-  source "$DOTFILES_CONFIG_HOME/20_bash_exports.sh" || return
+  echo "Loading bare environment" >&2
+  source "$DOTFILES_CONFIG_HOME/bash_exports.sh" || return
 
   # Install packages
-  find ../packages -type f -printf "%f\n" \
+  echo "Running package installers" >&2
+  find ./packages -type f -printf "%f\n" \
     | sort \
     | while read file; do
+      echo "... Running package installer $file" >&2
       "./packages/${file}" || return
     done  
 
   # Run installers
+  echo "Running installers" >&2
   ./scripts/setup-installers "install" || return
 
   # Run provisioners
   if $ARG_PROVISION; then
+    echo "Running provisioners" >&2
     ./scripts/setup-installers "provision" || return
   fi
 }

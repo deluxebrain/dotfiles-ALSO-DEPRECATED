@@ -1,11 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-ACTUAL_USER="${SUDO_USER:-$USER}"
+cd "`dirname "${BASH_SOURCE[0]}"`" || exit
 
-SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_PATH" || exit 1
+# Globals
+GIT_USER_EMAIL="`git config --global --includes user.email`"
 
-if [[ -z "$GIT_USEREMAIL" ]]; then
+# Guard clauses
+if [[ -z "$GIT_USER_EMAIL" ]]; then
     echo "ERROR: Git user email is not set" >&2
     false; exit
 fi
@@ -32,7 +33,7 @@ if ! [ -f "$HOME/.ssh/id_ed25519_default" ]; then
         -N "" \
         -q || exit
 fi
-sudo chown "$ACTUAL_USER" "$HOME/.ssh/id_ed25519_default"
+sudo chown "$USER" "$HOME/.ssh/id_ed25519_default"
 
 # -rw-------
 chmod 600 "$HOME/.ssh/id_ed25519_default" || exit
