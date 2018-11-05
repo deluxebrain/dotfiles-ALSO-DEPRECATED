@@ -1,8 +1,6 @@
-  if [[ -n "$(git config --global --includes user.name)" && \
-    -n "$(git config --global --includes user.email)" ]]; then
-    GIT_USERNAME="$(git config --global --includes user.name)"
-    GIT_USEREMAIL="$(git config --global --includes user.email)"
-  else
-    GIT_USERNAME="$(user_prompt "Enter git user name")"
-    GIT_USEREMAIL="$(user_prompt "Enter git email")"
-  fi
+README
+  - cf toolbox
+    - evolutionary
+    - never completed ( add what you need at the time )
+    - requires documenting
+

@@ -115,9 +115,9 @@ function extract_distributions()
         < /dev/stdin
 }
 
-# Filters PyEnv versions list by version specification
+# Filters semantic version list by version specification
 # Arguments:
-#   stdin: \tDISTRIBUTION-VERSION
+#   stdin: [*VERSION*]
 # Globals:
 #   VERSION
 # Returns:
@@ -137,6 +137,21 @@ function filter_by_version()
     grep -o "${version_parts[0]}.${version_parts[1]}.${version_parts[2]}" \
         | sort -V \
         < /dev/stdin
+}
+
+# Forms pyenv-version string
+# Arguments:
+#   $1: Version number
+# Globals:
+#   ARG_DISTRIBUTION
+#   DISTRIBUTION
+# Returns:
+#   pyenv-version 
+function form_pyenv_version()
+{
+    $ARG_DISTRIBUTION && \
+        echo "${DISTRIBUTION}-${1}" || \
+        echo "$1"
 }
 
 # Lists all Python versions available, defaulting to CPython
@@ -187,11 +202,12 @@ function CMD_distributions()
 # Globals:
 #   ARG_VERSION
 #   ARG_DISTRIBUTION
+#   DISTRIBUTION
 # Returns:
 #   1: no matching Python version available
 function CMD_install()
 {
-    local version
+    local version pyenv_version
 
     echo "Determining latest version of $TXT_DIST" \
         "`$ARG_VERSION && echo "matching version spec $TXT_VERSION"`" >&2
@@ -206,8 +222,9 @@ function CMD_install()
     fi
 
     echo "Installing ${BOLD}${version}${_BOLD} of $TXT_DIST" >&2
-
-    if ! pyenv install "$version" >&2; then
+        
+    pyenv_version="$(form_pyenv_version "$version")"    
+    if ! pyenv install "$pyenv_version" >&2; then
         echo "ERROR: Installation of $version of $TXT_DIST failed" >&2
         false; return
     fi
@@ -216,7 +233,7 @@ function CMD_install()
 # -o short options, --long long options
 # -q manual error handling
 # opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
-if ! OPTS=`getopt -q -o ad:lv: --long all,distribution:,latest,version: -- "$@"`; then
+if ! OPTS=`getopt -q -o ad:lv:h --long all,distribution:,latest,version:,help -- "$@"`; then
     usage ; exit
 fi
 
@@ -243,7 +260,7 @@ while true ; do
 done
 
 if ! (( $# == 1 )); then
-    usage ; exit
+    usage ; exit 1
 fi
 
 COMMAND="$1" ; shift

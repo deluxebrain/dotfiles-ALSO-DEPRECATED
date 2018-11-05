@@ -81,9 +81,9 @@ function find_and_run_installers()
       dir_is_submodule "$(dirname "$installer")" && continue
       
       echo "Running installer $installer" >&2
-      # redirect stdin to prevent while loop breaking early
-      # "$installer" </dev/null
-      if ! "$installer" ; then 
+      # redirect stdin otherwise installers can hang
+      # ( something todo with being in a while loop ? )      
+      if ! "$installer" </dev/null ; then 
         echo "ERROR: Unexpected error running installer $installer" >&2
         false; return
       fi

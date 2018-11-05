@@ -1,71 +1,120 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Any file prefixed git- can be called using git [suffix]
 # git histogram
 
 set -eou pipefail
 
+# Guard clauses
+if ! command -v spark >/dev/null 2>&1; then
+	echo "ERROR: Missing dependency 'spark'"
+  exit 1
+fi
+
+# Globals
+ARG_PERIOD="day"		# hour, day, week, month, year
+SEQ_NAME="days"			# hours, minutes, days
+SEQ_TOP=						# number of intervals to report over
+SEQ_STEP=						# size of interval aggregation
+
+# Console formatting
+BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
+UNDERLINE="$(tput smul)"; _UNDERLINE="$(tput rmul)"
+
 function usage()
 {
-  cat >&2 <<EOF
-$(basename "$0") PERIOD(=day)
-PERIOD : Period to show git activity { hour, day, week, month, year }
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
+  cat <<EOF
+    usage: $SCRIPT_NAME [-h|--help]
+                        [<command>] [<args>]
+
+    ${BOLD}OPTIONS${_BOLD}        
+        -h|--help
+            Display this help information
+
+    ${BOLD}COMMANDS${_BOLD}
+
+		Reporting periods
+			${BOLD}hour${_BOLD}		Last hour
+			${BOLD}day${_BOLD}		Last day ( default )
+			${BOLD}week${_BOLD}		Last week
+			${BOLD}month${_BOLD}		Last month
+			${BOLD}year${_BOLD}		Last year
+
+    Meta
+    	${BOLD}help${_BOLD}   Display this help information
 EOF
-  false
 }
 
-function parse_options()
-{
-  local opt
-
-  while getopts ":h" opt; do
-    case $opt in
-    h)
-      usage; return
-      ;;
-    esac
-  done
-
-  # strip parsed options ( up to -- )
-  shift $(($OPTIND-1))
-
-  g_seq_period="${1:-day}"
-  [ -n "$g_seq_period" ] || { usage; return; }
-}
-
+# Main
+# Arguments:
+# Globals:
+#		SEQ_TOP
+#		SEQ_STEP
+# 	SEQ_NAME
+#		ARG_PERIOD
+# Returns:
+# 	stdout: git activity graph
 function main()
 {
-	local g_seq_period
-	local seq_top seq_step seq_name seq_counter
-	local author
-
-	parse_options "$@" || return
-
-	case "$g_seq_period" in
-		hour) seq_name=minutes; seq_top=60; seq_step=5;;
-		day) seq_name=hours; seq_top=24; seq_step=1;;
-		week) seq_name=days; seq_top=7; seq_step=1;;
-		month) seq_name=days; seq_top=28; seq_step=1;;
-		year) seq_name=days; seq_top=365; seq_step=10;;
-		*) usage; return
-	esac
+	local author idx
 
 	author="$(git config user.name)"
-	for seq_counter in $(seq $seq_top $((seq_step*-1)) 0)
-	do
+	for idx in $(seq $SEQ_TOP $((SEQ_STEP*-1)) 0) ; do
 		git log \
-			--author "${author}" \
-			--before="${seq_counter} ${seq_name}" \
-			--after="$((seq_counter+seq_step)) ${seq_name}" \
+			--author "$author" \
+			--before="$idx $SEQ_NAME" \
+			--after="$((idx+SEQ_STEP)) $SEQ_NAME" \
 			--format=oneline | \
 			wc -l;
-	done | spark | echo "("$g_seq_period"): $(cat -)"
+	done | spark | echo "("$ARG_PERIOD"): $(cat -)"
 }
 
-command -v spark >/dev/null 2>&1 || {
-	echo "ERROR: Missing dependency 'spark'"
-}
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
+if ! OPTS=`getopt -q -o h --long help -- "$@"`; then
+    usage ; exit
+fi
+
+eval set -- "$OPTS"
+
+while true; do
+  case "$1" in   
+    -h|help) usage ; exit ;;
+    --) shift ; break ;;
+    *) usage ; exit 1 ;;
+  esac
+done
+
+if (( $# == 0 )); then
+	COMMAND="day"
+elif (( $# == 1 )); then
+	COMMAND="$1"
+elif (( $# > 1 )); then
+	usage ; exit 1
+fi
+
+case "$COMMAND" in  
+	"hour")
+		ARG_PERIOD="hour"
+		SEQ_NAME="minutes" ; SEQ_TOP=60; SEQ_STEP=5 ;;
+	"day") 
+		ARG_PERIOD="day"
+		SEQ_NAME="hours" ; SEQ_TOP=24; SEQ_STEP=1 ;;
+	"week") 
+		ARG_PERIOD="week"
+		SEQ_NAME="days" ; SEQ_TOP=7; SEQ_STEP=1 ;;
+	"month") 
+		ARG_PERIOD="month"
+		SEQ_NAME="days" ; SEQ_TOP=28; SEQ_STEP=1 ;;
+	"year") 
+		ARG_PERIOD="year"
+		SEQ_NAME="days" ; SEQ_TOP=365; SEQ_STEP=10 ;;
+	"help") usage ; exit ;;	
+	"") : ;;	
+  *) usage ; exit 1 ;;
+esac
 
 main "$@"
-exit
-
+exit $?
