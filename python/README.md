@@ -6,13 +6,14 @@ These tools are used to solve the following problems associated with Python deve
 
 1. pyenv
 
-    Used to isolate Python versions allowing multiple versions of Python to coexist and without impacting the system Python. Provides support for specifying Python version at the project level.
+    Used to isolate Python versions allowing multiple versions of Python to coexist and without impacting the system Python. 
+    Provides support for specifying Python version at the project level using the `pyenv local <version>` command.
 
 2. pipenv
 
-    Tool that combines complete Python development tooling, including virual environment and dependency management.
-    Intended to be used for all non-`conda` projects.
-    Note that `pipenv` has no support for `conda`.
+    Tool that provides complete Python development tooling, including virual environment and dependency management.    
+    Note that `pipenv` has no support for `conda` and hence is only Intended to be used for non-`conda` projects.
+    By default uses the Python it is installed against to create virtual environments. This can be overriden using the `--python` option or by setting the `PIPENV_PYTHON` environment variable.
 
 3. miniconda
 
@@ -27,55 +28,74 @@ These tools are used to solve the following problems associated with Python deve
 
     Note that `pip` is not actually used. Package management is natively provided by both `conda` and `pipenv`.
 
-## Python management
+## PyEnv 101
 
-pyenv local VERSION
-writes down .python-version file
-
-
-
-
-
-
-
-
-
-
-
-### Native pyenv commands
+### Setting Python versions
 
 ```sh
+# Set local application-specific Python version
+# Writes down Python version in .pyenv-version file in cwd
+# Can use multiple versions, e.g. to fallback to global Python 
+pyenv local <version>
+pyenv local <version> global
+ 
+# Set global Python version used in all shells
+# Writes down Python version in ~/.pyenv/version file
+# Override using .pyenv-version file or PYENV_VERSION environment variable
+# Can use multiple versions
+pyenv global <version>
+
+# Set global Python to system Python ( as determined by your $PATH )
+pyenv global system 
+
 # Show current Python version
 pyenv version
-
-# List all installed Python versions
-pyenv versions
-
-# List all Python versions available to install
-pyenv install --list
-
-# Install Python VERSION
-pyenv install VERSION
 ```
 
-### Usage through dotfile aliases
+### Installing Python versions
 
 ```sh
-# List all Python distributions available to install
-pyd
+# List Python versions available to install
+pyenv install --list
 
-# List all versions of a Python DISTRIBUTION available to install
-# Defaults to CPython
-pydv
-pydv DISTRIBUTION
+# Install Python <version>
+pyenv install <version>
 
-# Install latest version of Python distribtuion
-# Defaults to CPython
-pyi
-pyi DISTRIBUTION
+# Show installed Python versions
+pyenv versions
 ```
 
-## Python project setup
+## Pipenv 101
+
+### Standard workflow
+
+```sh
+# Create and enter project directory
+mkdir <project> && cd $_
+
+# Install Pipenv
+# Note will install from a Pipfile if present
+pipenv install --python <version>
+
+# Install production dependencies
+pipenv install <package>
+
+# Install development dependencies
+# E.g. unit testing packages
+pipenv installl --dev <package>
+
+# Generate Pipfile listing all project dependencies
+pipenv lock
+
+# Activate Pipenv shell
+pipenv shell
+python --version
+
+# Run Python script in Pipenv virtual environment
+pipenv run python <script>
+```
+
+## Suggested development workflows
 
 ### Conda project
 
@@ -83,17 +103,17 @@ pyi DISTRIBUTION
 # Create and enter project directory
 mkdir foo && cd $_
 
-# Set local Python version
-pyenv local miniconda-[VERSION]
+# Set local Python <version>
+pyenv local miniconda3-<version>
 
 # Create conda environment
-conda create -y -n [NAME]
+conda create -y -n <name>
 
 # Activate conda environment
-conda activate [NAME]
+conda activate <name>
 
 # Install dependencies
-conda install -y [PACKAGE]
+conda install -y <package>
 
 # Deactivate conda environment
 conda deactivate # or just cd out of project directory
@@ -109,25 +129,26 @@ mkdir foo && cd $_
 # Include fallback to the global environment for globally installed packages
 pyenv local 3.7.0 global
 
-# Create pipenv environment (or use 'pei' alias)
-# Note that pipenv is pulled in from the global environment
+# Create pipenv environment
+# Override Python version using --python option
+# ( $PIPENV_PYTHON environment variable )
 pipenv install --python `pyenv which python`
 
 # Install dependencies
-pipenv install [PACKAGE]
+pipenv install <package>
 
-# Run Python script (or use 'prp' alias)
-pipenv run python [SCRIPT]
+# Run Python script 
+pipenv run python <script>
 
 # Enter pipenv environment shell
 pipenv shell
 ```
 
-## Using Jupyter Notebook
+## Jupyter Notebook workflows
 
 Note that the `jupyter` package installs both `notebook` and `ipykernel` as dependencies.
 
-### Usage with a Conda environment
+### Conda environment workflow
 
 From within your activated conda environment:
 
@@ -142,7 +163,7 @@ conda install -y nb_conda
 jupyter notebook
 ```
 
-### Usage with a pipenv environment
+### Pipenv environment workflow
 
 First, create your pipenv based project as above.
 
@@ -168,11 +189,12 @@ Note that `pyenv-virtualenv` is being used for a couple of explicit reasons rela
 
 2. Provision of global virtual environment
 
-    Whereever possible Python pacakges should be installed in per-project virtual environments.
+    Where-ever possible Python pacakges should be installed in per-project virtual environments.
 
     However, some Python packages are genuinely required system-wide in that they are either needed across or outside of project specific work.
 
     Such Python packages are installed in the `global` virtual environment which is created using `pyenv-virtualenv`.
+
     For example, `pipenv` is installed into the global virtual enironment to allow it to be used for the creation of per-project virtual environments.
 
 ### Using VirtualEnv for virtual environment management
@@ -181,15 +203,15 @@ This is just FYI - use conda or pipenv in preference.
 
 ```sh
 # Create project virtualenv
-pyenv virtualenv [VERSION] [ENV_NAME]
+pyenv virtualenv <version> <name>
 
 # Create and enter project directory
 mkdir foo && cd $_
 
 # Set local python environment
-pyenv local [ENV_NAME]
+pyenv local <name>
 
 # To manually activate / deactive the virtual environment
-pyenv activate [ENV_NAME]
+pyenv activate <name>
 pyenv deactivate
 ```

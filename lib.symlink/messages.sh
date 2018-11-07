@@ -32,11 +32,20 @@ function msg_error()
   printf " [ %sERROR%s ] %s\n" "${PEN_ALERT}" "${PEN_RESET}" "$1" >&2
 }
 
+# Pause execution until user confirms ( any response )
+# Arguments:
+# Returns:
 function prompt_pause()
 {
   read -r -p "`msg_prompt "Hit enter to continue"` "
 }
 
+# Prompt user for confirmation
+# Arguments:
+#   $1: User message
+# Returns:
+#   0: Y
+#   1: N
 function prompt_confirm()
 {
   local message="$1" 
@@ -46,6 +55,11 @@ function prompt_confirm()
   [[ $REPLY =~ ^[Yy]$ ]]
 }
 
+# Prompt user for (non-blank) response
+# Arguments:
+#   $1: User message
+# Returns:
+#   stdout: User response
 function prompt_question()
 {  
   local message="$1" 
@@ -55,6 +69,11 @@ function prompt_question()
   echo "$REPLY"
 }
 
+# Display error message and exit 1
+# Arguments:
+#   $1: User message
+# Returns:
+#   ( exit 1)
 function fail()
 {
   printf " [ %sFAIL%s ] %s\n" "${PEN_ALERT}" "${PEN_RESET}" "$1" >&2

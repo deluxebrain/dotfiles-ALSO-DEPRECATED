@@ -1,15 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Start PyEnv
+source "$XDG_CONFIG_HOME/dotfiles/bash_pyenv.sh"
 
 echo "Provisioning Python environment" >&2
-
-source "$XDG_CONFIG_HOME/dotfiles/bash_pyenv.sh"
 
 # Install latest Python3 and miniconda3 distributions
 pyenv-wrapper -v 3.*.* install
 pyenv-wrapper -d miniconda3 install
 
 # Create virtualenv for global Python and packages
-# using the latest available Python 3
+# Configure to use the latest available Python 3
 pyenv virtualenv \
     `pyenv-wrapper -l -v 3.*.* versions 2>/dev/null` \
     global
@@ -21,7 +22,6 @@ pip install awscli
 pyenv deactivate
 
 # Set global Python environment to use the following environments
-# in the following order
 # This allows packages installed into the new global virtual
 # environment to be called without implicitly activiating it
 pyenv global system global

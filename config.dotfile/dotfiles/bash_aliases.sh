@@ -1,6 +1,7 @@
 shopt -s expand_aliases
 
 # Navigation
+# 
 
 alias ..="cd .."
 alias ...="cd ../.."
@@ -9,6 +10,7 @@ alias .....="cd ../../../.."
 alias ~="cd ~"
 
 # Colour support
+#
 
 # Detect which 'ls' flavour is in use
 if ls --color > /dev/null 2>&1; then # GNU
@@ -30,6 +32,7 @@ alias fgrep="fgrep ${colorflag}"
 alias egrep="egrep ${colorflag}"
 
 # File system
+#
 
 alias rm="rm -i"
 alias cp="cp -i"
@@ -37,11 +40,13 @@ alias mv="mv -i"
 alias mkdir="mkdir -p"
 
 # Search
+#
 
 # Find pattern in files recursively from current directory
 alias fif="grep -Rnw . -e"
 
 # Networking
+#
 
 # Get external ip address
 alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
@@ -53,18 +58,22 @@ alias digger="dig +nocmd any +multiline +noall +answer"
 alias lsp='sudo lsof -i -n -P | grep LISTEN'
 
 # Python
+#
 
-# pyi <distribution> - intall lastest version of distribution
+# pyi [<distribution>] - install lastest version of distribution
+# defaults to CPython
 alias pyi="pyenv-wrapper install"
 
-# List all distributions
+# List all distributions available
 alias pyd="pyenv-wrapper --all distributions"
 
-# pyv <distribution> - list all versions of distribution
+# pyv [<distribution>] - list all versions of distribution
+# defaults to CPython
 alias pyv="pyenv-wrapper --all versions"
 
-# pyl <distribution> - list latest installed version of distribution
-alias pyv="pyenv-wrapper --latest versions"
+# pyl [<distribution>] - list latest installed version of distribution
+# defaults to CPython
+alias pyl="pyenv-wrapper --latest versions"
 
 # pipenv
 alias prp="pipenv run python"

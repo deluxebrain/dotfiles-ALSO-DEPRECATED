@@ -4,15 +4,17 @@
 
 Note that the `nvm use` step has been automated in the shell dotfiles through integration with the `PROMPT_COMMAND`. 
 This causes the node version specified in the project `.nvmrc` file to be activated on entering the project directory.
+( As well as activating the global version when exiting the project directory. )
 
 ```sh
 # Create and enter project directory
 mkdir my_project && cd $_
 
-# Create a project nvm file specifying the desired VERSION
-echo [VERSION] > .nvmrc
+# Create a project nvm file specifying the desired <version>
+echo <version> > .nvmrc
 
-# Activate the node version
+# Activate the node version as specified in the .nvmrc
+# ( performed automatically by the PROMPT_COMMAND )
 nvm use
 ```
 
@@ -21,17 +23,17 @@ nvm use
 ### Listing versions
 
 ```sh
-# List remote node versions
+# List node versions available for installation
 nvm ls-remote
 
 # List installed node versions
 nvm ls
 
-# Show default version
-nvm alias default
-
-# Show current version
+# Show currently active node version
 nvm version
+
+# Show default node version
+nvm alias default
 ```
 
 ### Installing versions
@@ -40,22 +42,24 @@ nvm version
 # Install latest node
 nvm install node
 
-# Install latest node with major VERSION
-nvm install [VERSION]
+# Install latest node version matching version specification major.minor.patch
+# E.g. nvm install 10.1
+nvm install <version>
 ```
 
 ### Setting versions
 
 ```sh
-# Set the default VERSION
-nvm alias default VERSION
-
-# Use the default version
-nvm use default
+# Set the default <version>
+nvm alias default <version>
 
 # Use latest node in the current shell
 nvm use node
 
-# Use the latest node with major VERSION in the current shell
-nvm use [VERSION]
+# Use the latest node version matching version specification major.minor.patch
+# E.g. nvm use 10.1
+nvm use <version>
+
+# Use the default version
+nvm use default
 ```

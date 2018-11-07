@@ -10,4 +10,4 @@ Discovery of data storage location is performed using environment variables, as 
 | XDG_CONFIG_HOME | $HOME/.config/ | app config and state |
 | XDG_DATA_HOME | $HOME/.local/share/ | app user-created data |
 
-For example, the _Powerline_ application uses the XDG specification for configuration, and stores its application configuration in _$HOME/.config/powerline_.
+For example, the *Powerline* application uses the XDG specification for configuration, and stores its application configuration in `$HOME/.config/powerline`.

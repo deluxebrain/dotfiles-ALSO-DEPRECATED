@@ -1,9 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eou pipefail
 
 echo "Installing nvm" >&2
 
+# Create temporary working directory
+# Delete it on exit
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 

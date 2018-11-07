@@ -14,8 +14,8 @@ fi
 # Globals
 ARG_PERIOD="day"		# hour, day, week, month, year
 SEQ_NAME="days"			# hours, minutes, days
-SEQ_TOP=						# number of intervals to report over
-SEQ_STEP=						# size of interval aggregation
+SEQ_TOP=				# number of intervals to report over
+SEQ_STEP=				# size of interval aggregation
 
 # Console formatting
 BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"

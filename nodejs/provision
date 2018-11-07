@@ -1,8 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Start nvm
+source "$XDG_CONFIG_HOME/dotfiles/bash_nvm.sh"
 
 echo "Provisioning NodeJS environment" >&2
-
-source "$XDG_CONFIG_HOME/dotfiles/bash_nvm.sh"
 
 # Install latest version of node
 nvm install node
@@ -11,5 +12,5 @@ nvm install node
 nvm install 8
 nvm install 10
 
-# Set the default version
+# Set the default version to the lastest installed NodeJS version
 nvm alias default node
