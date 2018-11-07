@@ -22,6 +22,7 @@ function source_bash_files()
         "bash_ssh-agent.sh"
         "bash_nvm.sh"
         "bash_pyenv.sh"
+        "bash_rvm.sh"
         "bash_powerline.sh"
         "bash_autocomplete.sh"
     )

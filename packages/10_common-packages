@@ -21,4 +21,9 @@ sudo apt-get install -y \
 
 # Tools
 sudo apt-get install -y \
-    unzip
+    unzip \
+    gnupg2
+
+# Support for PPA repositories
+sudo apt-get install -y \
+    software-properties-common
