@@ -10,7 +10,6 @@ if (( $(id -u) == 0 )); then
 fi
 
 # Globals
-DOTFILES_CONFIG_HOME="$HOME/.config/dotfiles"
 DOTFILES_GROUP="dotfiles"
 ARG_FORCE=false       # allow install over existing
 ARG_OPTION=backup     # overwrite | backup | skip
@@ -190,11 +189,7 @@ function main()
   echo "Installing dotfiles" >&2
   ./scripts/setup-dotfiles \
     -o "$ARG_OPTION" \
-    -g "$DOTFILES_GROUP" || return
-
-  # Load bare minimum environment required by installers / provisioners
-  echo "Loading bare environment" >&2
-  source "$DOTFILES_CONFIG_HOME/bash_exports.sh" || return
+    -g "$DOTFILES_GROUP" || return  
 
   # Install packages
   echo "Running package installers" >&2
@@ -206,13 +201,15 @@ function main()
     done  
 
   # Run installers
+  # -u: Run as user so as to pull in new environment
   echo "Running installers" >&2
-  ./scripts/setup-installers "install" || return
+  ./scripts/setup-installers -u "install" || return
 
-  # Run provisioners
+  # Run provisioners  
+  # -u: Run as user so as to pull in new environment
   if $ARG_PROVISION; then
-    echo "Running provisioners" >&2
-    ./scripts/setup-installers "provision" || return
+    echo "Running provisioners" >&2    
+    ./scripts/setup-installers -u "provision" || return
   fi
 }
 

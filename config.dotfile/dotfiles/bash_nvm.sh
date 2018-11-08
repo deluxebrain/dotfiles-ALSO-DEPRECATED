@@ -1,9 +1,6 @@
 # Globals
 __NVM_DIRTY=false
 
-# PROMPT_COMMAND must be set before configuring Powerline
-export PROMPT_COMMAND=__PROMPT_COMMAND_NVM
-
 # Global environment function
 # Uses the nvm provided `nvm_find_nvmrc` function to find the .nvmrc file in scope
 function __PROMPT_COMMAND_NVM()
@@ -27,7 +24,7 @@ function __PROMPT_COMMAND_NVM()
 
         # Node version specified in the .nvmrc file
         nvmrc_node_version="$(nvm version "$(cat "$nvmrc_path")")"
-        
+
         # Check we are running the specified node version
         if [ "$nvmrc_node_version" = "N/A" ]; then
             # Specificed node version is not installed locally
@@ -42,3 +39,7 @@ function __PROMPT_COMMAND_NVM()
 [ -d "$NVM_DIR" ] || return
 [ -f "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 [ -f "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# PROMPT_COMMAND must be set before configuring Powerline
+command -v nvm >/dev/null && \
+    export PROMPT_COMMAND=__PROMPT_COMMAND_NVM

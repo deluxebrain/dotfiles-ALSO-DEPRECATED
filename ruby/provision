@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Start RVM
-source "$XDG_CONFIG_HOME/dotfiles/bash_rvm.sh"
+source "$DOTFILES_CONFIG_HOME/bash_rvm.sh"
 
 echo "Provisioning rvm environment" >&2
 
@@ -13,14 +13,13 @@ rvm autolibs packages
 # Update RVM to latest stable build
 echo "Patching RVM to latest version" >&2
 rvm get stable
-rvm reload
 
 # Get the latest stable ruby version
 echo "Installing latest stable ruby version" >&2
 # 0: only verified
 # 1: allow missing checksums
 # 2: allow failed checksums
-rvm install ruby --verify-downloads -0
+rvm install ruby --latest --verify-downloads 1
 
 # Set default ruby version
 rvm use --default ruby

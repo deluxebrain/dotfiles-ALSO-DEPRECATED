@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Only proceed if running interactively
-[[ "$-" == *i* ]] || return
-
 export DOTFILES_CONFIG_HOME="$HOME/.config/dotfiles"
 
 # Source all files in the dotfiles directory in filename order
@@ -12,12 +9,10 @@ function source_bash_files()
 {
     local idx file
 
-    # Use explicit array of files
-    # (as opposed to iterating over files with numeric prefix)
-    # as these files are sourced elsewhere and hence need stable filename
+    # Notes:
+    # RVM requires PATH to be frozen before initialization
     local -r -a files=(
         "bash_options.sh"
-        "bash_exports.sh"
         "bash_aliases.sh"
         "bash_ssh-agent.sh"
         "bash_nvm.sh"
@@ -28,13 +23,34 @@ function source_bash_files()
     )
 
     # "${!name[@]}"
-    # expand array keys into separate words  
+    # expand array keys into separate words
     for idx in "${!files[@]}"; do
         file="${files[$idx]}"
         [ -f "$DOTFILES_CONFIG_HOME/$file" ] && { \
             source "$DOTFILES_CONFIG_HOME/$file" || return ; }
-    done   
+    done
 }
 
-source_bash_files
+# Run the following regarding of shell type
+source "$DOTFILES_CONFIG_HOME/bash_exports.sh"
+
+# History
+# don't put duplicate lines or lines starting with space in the history.
+HISTCONTROL=ignoreboth
+HISTSIZE=10000
+HISTFILESIZE=10000
+
+# Path
+PATH="$HOME/bin:$PATH"
+PATH="$PYENV_ROOT/bin:$PATH"
+# Used for python packages when using pip --user
+PATH="$HOME/.local/bin:$PATH"
+# RVM - must be last PATH change
+PATH="$PATH:$HOME/.rvm/bin"
+
+# Run the following only if interactive
+if [[ "$-" == *i* ]]; then
+    source_bash_files
+fi
+
 unset -f source_bash_files

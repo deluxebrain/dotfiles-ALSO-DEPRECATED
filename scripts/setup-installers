@@ -3,8 +3,10 @@
 cd "`dirname "${BASH_SOURCE[0]}"`" || exit
 
 # Globals
-GIT_ROOT=         # project git root directory
-ARG_ACTION=       # install | provision
+GIT_ROOT=               # project git root directory
+ARG_RUN_AS_USER=false   # run installer script as specified user
+ARG_USER=               # user to run script as
+ARG_ACTION=             # install | provision
 
 # Console formatting
 BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
@@ -14,10 +16,13 @@ function usage()
 {
   SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
   cat <<EOF
-    usage: $SCRIPT_NAME [-h|--help]
-                        <command> [<args>]
+    usage: $SCRIPT_NAME   [-u|--user[${UNDERLINE}<user>${_UNDERLINE}]]
+                          [-h|--help]
+                          <command> [<args>]
 
     ${BOLD}OPTIONS${_BOLD}       
+        -u|--user
+            Run script as specified user. Defaults to \$USER.
         -h|--help
             Display this help information
 
@@ -70,7 +75,8 @@ function find_and_run_installers()
 
   # mindepth: only search subdirectories
   # exclude subdirectories ending with #  
-  find . \
+  # use absolute path with find as we need file references to be absolute
+  find "`pwd`" \
     -mindepth 2 \
     -maxdepth 3 \
     -name "$ARG_ACTION" \
@@ -79,11 +85,18 @@ function find_and_run_installers()
     
       # exclude subdirectories that are git submodules
       dir_is_submodule "$(dirname "$installer")" && continue
-      
-      echo "Running installer $installer" >&2
+            
       # redirect stdin otherwise installers can hang
       # ( something todo with being in a while loop ? )      
-      if ! "$installer" </dev/null ; then 
+      if $ARG_RUN_AS_USER; then
+        echo "Running installer $installer as $ARG_USER" >&2
+        sudo su -c "$installer </dev/null" --login "$ARG_USER"
+      else
+        echo "Running installer $installer" >&2
+        "$installer" </dev/null
+      fi 
+      
+      if (( $? != 0 )); then 
         echo "ERROR: Unexpected error running installer $installer" >&2
         false; return
       fi
@@ -101,7 +114,7 @@ function main()
 # -o short options, --long long options
 # -q manual error handling
 # opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
-if ! OPTS=`getopt -q -o h --long help -- "$@"`; then
+if ! OPTS=`getopt -q -o u::h --long user::,help -- "$@"`; then
     usage ; exit
 fi
 
@@ -109,7 +122,11 @@ eval set -- "$OPTS"
 
 while true; do
   case "$1" in   
-    -h|help) usage ; exit ;;
+    -u|--user)
+      ARG_RUN_AS_USER=true
+      [ -n "$2" ] && ARG_USER="$2" || ARG_USER="$USER"
+      shift 2 ;;
+    -h|--help) usage ; exit ;;
     --) shift ; break ;;
     *) usage ; exit 1 ;;
   esac

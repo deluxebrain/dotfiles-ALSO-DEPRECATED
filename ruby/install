@@ -3,3 +3,35 @@
 set -eou pipefail
 
 echo "Installing Ruby" >&2
+
+# Create temporary working directory
+# Delete it on exit
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+# Import rvm public key to enable package verification
+gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+gpg2 --refresh-keys
+# Trust the key
+echo 409B6B1796C275462A1703113804BB82D39DC0E3:6: \
+    | gpg2 --import-ownertrust
+
+# Download the installer
+curl -s -o "$TMPDIR/rvm-installer" \
+    "https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer"
+curl -s -o "$TMPDIR/rvm-installer.asc" \
+    "https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer.asc"
+
+# Verify the installer signature
+if ! gpg --verify "$TMPDIR/rvm-installer.asc" ; then
+    echo "Error validating rvm installer" >&2
+    false ; return
+fi
+
+# Install rvm
+# Installs RVM to ~/.rvm and hence no need for an rvm group
+# ( as opposed to /usr/share/rvm if installed via apt-get )
+# Configure the installer to not setup rvm in the dotfiles
+# ( would otherwise write to ~/.profile )
+export rvm_ignore_dotfiles=yes
+bash "$TMPDIR/rvm-installer" stable

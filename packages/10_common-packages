@@ -21,7 +21,7 @@ sudo apt-get install -y \
 
 # Tools
 sudo apt-get install -y \
-    unzip \
+    zip \
     gnupg2
 
 # Support for PPA repositories

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Start nvm
-source "$XDG_CONFIG_HOME/dotfiles/bash_nvm.sh"
+source "$DOTFILES_CONFIG_HOME/bash_nvm.sh"
 
 echo "Provisioning NodeJS environment" >&2
 

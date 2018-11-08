@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Start PyEnv
-source "$XDG_CONFIG_HOME/dotfiles/bash_pyenv.sh"
+source "$DOTFILES_CONFIG_HOME/bash_pyenv.sh"
 
 echo "Provisioning Python environment" >&2
 
