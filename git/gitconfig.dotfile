@@ -93,4 +93,3 @@ autocorrect = 1
 
 # Include summaries of merged commits in newly created merge commit messages
 log = true
-
