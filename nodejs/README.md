@@ -2,7 +2,7 @@
 
 ## NVM development workflow
 
-Note that the `nvm use` step has been automated in the shell dotfiles through integration with the `PROMPT_COMMAND`. 
+Note that the `nvm use` step has been automated in the shell dotfiles through integration with the `PROMPT_COMMAND`.
 This causes the node version specified in the project `.nvmrc` file to be activated on entering the project directory.
 ( As well as activating the global version when exiting the project directory. )
 
