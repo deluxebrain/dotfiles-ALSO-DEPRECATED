@@ -11,6 +11,9 @@ echo "Configuring RVM" >&2
 rvm autolibs packages
 
 # Update RVM to latest stable build
+# Configure the installer to not setup rvm in the dotfiles
+# ( would otherwise write to ~/.profile )
+export rvm_ignore_dotfiles=yes
 echo "Patching RVM to latest version" >&2
 rvm get stable
 

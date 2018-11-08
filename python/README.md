@@ -6,12 +6,12 @@ These tools are used to solve the following problems associated with Python deve
 
 1. pyenv
 
-    Used to isolate Python versions allowing multiple versions of Python to coexist and without impacting the system Python. 
+    Used to isolate Python versions allowing multiple versions of Python to coexist and without impacting the system Python.
     Provides support for specifying Python version at the project level using the `pyenv local <version>` command.
 
 2. pipenv
 
-    Tool that provides complete Python development tooling, including virual environment and dependency management.    
+    Tool that provides complete Python development tooling, including virual environment and dependency management.
     Note that `pipenv` has no support for `conda` and hence is only Intended to be used for non-`conda` projects.
     By default uses the Python it is installed against to create virtual environments. This can be overriden using the `--python` option or by setting the `PIPENV_PYTHON` environment variable.
 
@@ -35,10 +35,10 @@ These tools are used to solve the following problems associated with Python deve
 ```sh
 # Set local application-specific Python version
 # Writes down Python version in .pyenv-version file in cwd
-# Can use multiple versions, e.g. to fallback to global Python 
+# Can use multiple versions, e.g. to fallback to global Python
 pyenv local <version>
 pyenv local <version> global
- 
+
 # Set global Python version used in all shells
 # Writes down Python version in ~/.pyenv/version file
 # Override using .pyenv-version file or PYENV_VERSION environment variable
@@ -46,7 +46,7 @@ pyenv local <version> global
 pyenv global <version>
 
 # Set global Python to system Python ( as determined by your $PATH )
-pyenv global system 
+pyenv global system
 
 # Show current Python version
 pyenv version
@@ -75,6 +75,9 @@ mkdir <project> && cd $_
 
 # Install Pipenv
 # Note will install from a Pipfile if present
+# If PIPENV_PYTHON environment variable is set it will will pyenv Python version
+# Else provide python version explicitly using --python option
+# Will generate Pipfile and Pipefile.lock files, both of which should be added to source control
 pipenv install --python <version>
 
 # Install production dependencies
@@ -137,7 +140,7 @@ pipenv install --python `pyenv which python`
 # Install dependencies
 pipenv install <package>
 
-# Run Python script 
+# Run Python script
 pipenv run python <script>
 
 # Enter pipenv environment shell
