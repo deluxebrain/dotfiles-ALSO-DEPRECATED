@@ -1,0 +1,8 @@
+export rvm_pretty_print_flag=1
+
+# Gem options
+export rvm_get_options="--no-rdoc --no-ri"
+
+# Project settings
+# Automatic loading of project .rvmrc
+export rvm_project_rvmrc=1

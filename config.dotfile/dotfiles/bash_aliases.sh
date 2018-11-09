@@ -1,7 +1,7 @@
 shopt -s expand_aliases
 
 # Navigation
-# 
+#
 
 alias ..="cd .."
 alias ...="cd ../.."
@@ -78,3 +78,8 @@ alias pyl="pyenv-wrapper --latest versions"
 # pipenv
 alias prp="pipenv run python"
 alias pei='pipenv install --python `pyenv which python`'
+
+# Ruby
+#
+
+alias mux="tmuxinator"

@@ -17,6 +17,12 @@ export rvm_ignore_dotfiles=yes
 echo "Patching RVM to latest version" >&2
 rvm get stable
 
+# Setup default gems that will be installed with each new Ruby version
+cat << EOF >> ~/.rvm/gemsets/default.gems
+bundler
+tmuxinator
+EOF
+
 # Get the latest stable ruby version
 echo "Installing latest stable ruby version" >&2
 # 0: only verified
@@ -25,4 +31,6 @@ echo "Installing latest stable ruby version" >&2
 rvm install ruby --latest --verify-downloads 1
 
 # Set default ruby version
-rvm use --default ruby
+# Switch back using:
+# rvm use system
+rvm use ruby --default
