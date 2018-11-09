@@ -18,6 +18,8 @@ echo "Patching RVM to latest version" >&2
 rvm get stable
 
 # Setup default gems that will be installed with each new Ruby version
+# Note that this file might get overwritten with subsequent updates of RVM
+# ( e.g. via rvm get stable )
 cat << EOF >> ~/.rvm/gemsets/default.gems
 bundler
 tmuxinator
