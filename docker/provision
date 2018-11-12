@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+echo "Verifying docker installation" >&2
+
+# Verify that the docker installation has succeeded
+sudo docker run hello-world || exit

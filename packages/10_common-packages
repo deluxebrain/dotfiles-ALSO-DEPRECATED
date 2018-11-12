@@ -2,6 +2,18 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+# Packages to allow apt to use repositories over https
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    wget \
+    software-properties-common
+
+# Support for PPA repositories
+sudo apt-get install -y \
+    software-properties-common
+
 # Compilation
 sudo apt-get install -y \
     make \
@@ -11,19 +23,8 @@ sudo apt-get install -y \
     libbz2-dev \
     libreadline-dev \
     libsqlite3-dev \
-    wget \
-    curl \
     llvm \
     libncurses5-dev \
     libncursesw5-dev \
     xz-utils \
     tk-dev
-
-# Tools
-sudo apt-get install -y \
-    zip \
-    gnupg2
-
-# Support for PPA repositories
-sudo apt-get install -y \
-    software-properties-common
