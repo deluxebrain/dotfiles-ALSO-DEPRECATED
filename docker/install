@@ -9,7 +9,7 @@ PLATFORM="`uname -s`-`uname -m`"    # e.g. Linux-x86_64
 
 DOCKER_CE_VERSION=                  # in format "vMAJOR.MINOR.PATCH"
 DOCKER_CE_META_URL="https://api.github.com/repos/docker/docker-ce/releases/latest"
-DOCKER_CE_URL_TMPL='https://raw.githubusercontent.com/docker/docker-ce/$DOCKER_VERSION'
+DOCKER_CE_URL_TMPL='https://raw.githubusercontent.com/docker/docker-ce/$DOCKER_CE_VERSION'
 
 DOCKER_MACHINE_VERSION=             # in format "vMAJOR.MINOR.PATCH"
 DOCKER_MACHINE_META_URL="https://api.github.com/repos/docker/machine/releases/latest"
@@ -72,7 +72,7 @@ curl -s "`eval echo $DOCKER_CE_URL_TMPL/components/cli/contrib/completion/bash/d
 #   name: <version>,
 #   assets: [ { name: docker-machine-<platform>, browser_download_url: <url> } ] }
 DOCKER_MACHINE_META=(`curl -s "$DOCKER_MACHINE_META_URL" \
-        | jq -r '.name, (.assets[] | select (.name="docker-machine-$PLATFORM") | .browser_download_url)'`)
+        | jq -r --arg NAME "docker-machine-$PLATFORM" '.name, (.assets[] | select (.name==$NAME) | .browser_download_url)'`)
 
 # Download Docker Machine
 # Example:
@@ -82,10 +82,11 @@ DOCKER_MACHINE_DOWNLOAD_URL="${DOCKER_MACHINE_META[1]}"
 echo "Installing Docker Machine $DOCKER_MACHINE_VERSION" >&2
 echo "Using download url: $DOCKER_MACHINE_DOWNLOAD_URL" >&2
 # -O: Output file
-wget -O "$TMPDIR/docker-machine-$PACKAGE" "$DOCKER_MACHINE_DOWNLOAD_URL"
+wget -O "$TMPDIR/docker-machine-$PLATFORM" "$DOCKER_MACHINE_DOWNLOAD_URL"
 
 # Install Docker Machine
-sudo install "$TMPDIR/docker-machine-$PACKAGE"
+ls -al "$TMPDIR/"
+sudo install "$TMPDIR/docker-machine-$PLATFORM" /usr/local/bin/docker-machine
 
 # Install Docker Machine completions and wrapper scripts
 # Example:

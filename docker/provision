@@ -2,5 +2,8 @@
 
 echo "Verifying docker installation" >&2
 
-# Verify that the docker installation has succeeded
-sudo docker run hello-world || exit
+# Verify that the docker installation has succeededs
+docker run hello-world || exit
+
+# Verify docker machine installation has successed
+docker-machine --version || exit
