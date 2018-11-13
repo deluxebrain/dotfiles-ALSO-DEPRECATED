@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# GitHub api rate check:
+# curl https://api.github.com/rate_limit
+
+set -eou pipefail
+
+echo "Installing Docker Compose" >&2
+
+PLATFORM="`uname -s`-`uname -m`"    # e.g. Linux-x86_64
+
+DOCKER_COMPOSE_VERSION=             # in format "MAJOR.MINOR.PATCH"
+DOCKER_COMPOSE_META_URL="https://api.github.com/repos/docker/compose/releases/latest"
+DOCKER_COMPOSE_META=
+DOCKER_COMPOSE_DOWNLOAD_URL=
+DOCKER_COMPOSE_URL_TMPL='https://raw.githubusercontent.com/docker/compose/$DOCKER_MACHINE_VERSION'
+
+# Create temporary working directory
+# Delete it on exit
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+# Get docker compose meta into array as follows:
+# 0: version
+# 1: download url
+# Curl returns: {
+#   name: <version>,
+#   assets: [ { name: docker-compose-<platform>, browser_download_url: <url> } ] }
+DOCKER_COMPOSE_META=(`curl -s "$DOCKER_COMPOSE_META_URL" \
+    | jq -r --arg NAME "docker-compose-$PLATFORM" '.name, (.assets[] | select (.name==$NAME) | .browser_download_url)'`)
+
+# Download Docker Compose
+# Example:
+# https://github.com/docker/compose/releases/download/1.23.1/docker-compose-Linux-x86_64
+DOCKER_COMPOSE_VERSION="$(sed -nr "s/^v(.*)$/\1/p" <<<${DOCKER_COMPOSE_META[0]})"
+DOCKER_COMPOSE_DOWNLOAD_URL="${DOCKER_COMPOSE_META[1]}"
+echo "Installing Docker Compose version $DOCKER_COMPOSE_VERSION" >&2
+echo "Using download url: $DOCKER_MACHINE_DOWNLOAD_URL" >&2
+# -O: Output file
+wget -O "$TMPDIR/docker-compose-$PLATFORM" "$DOCKER_COMPOSE_DOWNLOAD_URL"
+
+# Install Docker Compose
+sudo install "$TMPDIR/docker-compose-$PLATFORM" /usr/local/bin/docker-compose
+
+# Install Docker Compose completions
+# Example:
+# https://raw.githubusercontent.com/docker/compose/1.23.1/contrib/completion/bash/docker-compose
+for file in docker-compose
+do
+    # -P: Prefix directory
+    sudo wget "`eval echo $DOCKER_COMPOSE_URL_TMPL/contrib/completion/bash/$file`" \
+        -P /etc/bash_completion.d
+done

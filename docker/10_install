@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+# GitHub api rate check:
+# curl https://api.github.com/rate_limit
+
+set -eou pipefail
+
+echo "Installing Docker" >&2
+
+DOCKER_CE_VERSION=      # in format "vMAJOR.MINOR.PATCH"
+DOCKER_CE_META_URL="https://api.github.com/repos/docker/docker-ce/releases/latest"
+DOCKER_CE_URL_TMPL='https://raw.githubusercontent.com/docker/docker-ce/v$DOCKER_CE_VERSION'
+
+# Get latest Docker release version using GitHub api
+# Curl returns: { name: <version> }
+# jq -r: Get raw strings ( no quotes )
+DOCKER_CE_VERSION="$(curl -s "$DOCKER_CE_META_URL" \
+    | jq -r .name)"
+echo "Installing Docker version $DOCKER_CE_VERSION" >&2
+
+# Remove older version of docker that might have
+# come bundled with the OS
+sudo apt-get remove -y \
+    docker \
+    docker-engine \
+    docker.io
+
+# Install Dockers GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | sudo apt-key add -
+
+# Add Docker repository
+sudo add-apt-repository -y \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update -y
+
+# Install Docker CE
+# This will create the docker group
+# and setup the docker service to autostart
+sudo apt-get install docker-ce
+
+# Add current user to docker group
+# Note this wont take affect until subsequent login
+sudo usermod -aG docker "$USER"
+
+# Install Docker Bash completions
+# Example
+# https://raw.githubusercontent.com/docker/docker-ce/v18.09.0/components/cli/contrib/completion/bash/docker
+curl -s "`eval echo $DOCKER_CE_URL_TMPL/components/cli/contrib/completion/bash/docker`" \
+    | sudo tee /etc/bash_completion.d/docker.sh >/dev/null
