@@ -20,7 +20,7 @@ function usage()
                           [-h|--help]
                           <command> [<args>]
 
-    ${BOLD}OPTIONS${_BOLD}       
+    ${BOLD}OPTIONS${_BOLD}
         -u|--user
             Run script as specified user. Defaults to \$USER.
         -h|--help
@@ -74,7 +74,7 @@ function find_and_run_installers()
   cd "$GIT_ROOT" || return
 
   # mindepth: only search subdirectories
-  # exclude subdirectories ending with #  
+  # exclude subdirectories ending with #
   # use absolute path with find as we need file references to be absolute
   find "`pwd`" \
     -mindepth 2 \
@@ -82,21 +82,21 @@ function find_and_run_installers()
     -name "$ARG_ACTION" \
     -not -path '*#/*' | \
     while read -r installer; do
-    
+
       # exclude subdirectories that are git submodules
       dir_is_submodule "$(dirname "$installer")" && continue
-            
+
       # redirect stdin otherwise installers can hang
-      # ( something todo with being in a while loop ? )      
+      # ( something todo with being in a while loop ? )
       if $ARG_RUN_AS_USER; then
         echo "Running installer $installer as $ARG_USER" >&2
         sudo su -c "$installer </dev/null" --login "$ARG_USER"
       else
         echo "Running installer $installer" >&2
         "$installer" </dev/null
-      fi 
-      
-      if (( $? != 0 )); then 
+      fi
+
+      if (( $? != 0 )); then
         echo "ERROR: Unexpected error running installer $installer" >&2
         false; return
       fi
@@ -107,7 +107,7 @@ function find_and_run_installers()
 # Arguments:
 # Returns:
 function main()
-{  
+{
   find_and_run_installers || return
 }
 
@@ -121,7 +121,7 @@ fi
 eval set -- "$OPTS"
 
 while true; do
-  case "$1" in   
+  case "$1" in
     -u|--user)
       ARG_RUN_AS_USER=true
       [ -n "$2" ] && ARG_USER="$2" || ARG_USER="$USER"
@@ -136,7 +136,7 @@ COMMAND="$1" ; shift
 
 case "$COMMAND" in
   install|provision) ARG_ACTION="$COMMAND" ;;
-  help) usage ; exit ;; 
+  help) usage ; exit ;;
   *) usage ; exit 1 ;;
 esac
 
