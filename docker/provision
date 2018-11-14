@@ -2,8 +2,12 @@
 
 echo "Verifying docker installation" >&2
 
-# Verify that the docker installation has succeededs
+# Verify that the docker-ce installation was successful
+docker --version || exit
 docker run hello-world || exit
 
-# Verify docker machine installation has successed
+# Verify docker machine installation was successful
 docker-machine --version || exit
+
+# Verify docker compose installation was successful
+docker-compose --version || exit
