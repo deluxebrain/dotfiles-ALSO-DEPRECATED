@@ -13,3 +13,6 @@ sudo apt-get install -y \
     powerline \
     fonts-powerline
 
+# Virtualization
+sudo apt-get install -y \
+    virtualbox
