@@ -10,6 +10,11 @@ sudo apt-get install -y \
     tree \
     silversearcher-ag
 
+# Minic pbcopy
+sudo apt-get install -y \
+    xclip \
+    xsel
+
 # Virtualization
 sudo apt-get install -y \
     virtualbox

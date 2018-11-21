@@ -42,7 +42,7 @@ file. This allows for full scripting, however it requires explicit rvm trust.
 
 ```sh
 # Create .rvmrc file with specified version
-rvm use --create --rvmrc <version>@<project>
+rvm --create --rvmrc use <version>@<project>
 
 # Trust the file
 rvm rvmrc trust /path/to/project
@@ -51,7 +51,7 @@ rvm rvmrc trust /path/to/project
 ### .ruby-version
 
 ```sh
-rvm --ruby-version use <version>
+rvm use --ruby-version <version>
 ```
 
 ## Notes

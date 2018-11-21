@@ -33,8 +33,16 @@ sudo apt-get remove -y \
     docker.io
 
 # Install Dockers GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-    | sudo apt-key add -
+# Note APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE prevents apt-key warning when used
+# non-interactively
+sudo apt-key adv --fetch-keys https://download.docker.com/linux/ubuntu/gpg
+if \
+    ! APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=True \
+        apt-key fingerprint "0EBFCD88" \
+        | grep -q "9DC8 5822 9FC7 DD38 854A  E2D8 8D81 803C 0EBF CD88" ; then
+    echo "Error importing docker gpg key" >&2
+    false; exit
+fi
 
 # Add Docker repository
 sudo add-apt-repository -y \

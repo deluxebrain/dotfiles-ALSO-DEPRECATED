@@ -23,6 +23,8 @@ These tools are used to solve the following problems associated with Python deve
 
     As architected in these dotfiles `pyenv-virtualenv` is intended to be used purely integration with miniconda.
     If you find yourself writing `pyenv virtualenv` outside of conda projects please use `pipenv` instead.
+    Note that it is possible to configure pipenv to use virtual environments managed by pyenv-virtualenv.
+    In addition to sounding slightly perverse this does not work in practice.
 
 5. pip
 
@@ -34,20 +36,27 @@ These tools are used to solve the following problems associated with Python deve
 
 ### Setting Python versions
 
+Pyenv records the globally specified python version in the following file:
+`~/.pyenv/version`
+
+Locally specified python versions are recorded in the following file;
+`.python-version`
+
+It is also possible to override the python version using the `PYENV_VERSION` environment
+variable.
+
+It is possible to specify multiple python versions, which then define an ordered resolution scope.
+Note that pip packages installed in python versions are also available when this python version
+is not specified as the primary version. However - they will not appear in a `pip list`, etc.
+
 ```sh
 # Set project-level Python version
-# Writes down Python version in .python-version file in cwd
-# Can use multiple versions, e.g. to fallback to globalenv Python environment
-pyenv local <version>
-pyenv local <version> globalenv
+pyenv local <version> ...
 
 # Set global Python version used in all shells
-# Writes down Python version in ~/.pyenv/version file
-# Override using .python-version file or PYENV_VERSION environment variable
-# Can use multiple versions
-pyenv global <env_1> <env_2>
+pyenv global <version> ...
 
-# Set global Python to system Python ( as determined by your $PATH )
+# Set global Python to system Python ( as determined by $PATH )
 pyenv global system
 
 # Show current Python version
@@ -71,14 +80,15 @@ pyenv versions
 
 ### Basic workflow when used with pyenv
 
+The integration of conda virtual environments with pyenv is provied through pyenv-virtualenv.
+In addition, this also provides auto activation of conda environments on project entry.
+
 ```sh
 # Create conda environment
-# Note we are using pyenv-virtualwrapper to achieve this (see notes section)
 pyenv virtualenv <version> <name>
 pyenv local <name>
 
-# Conda environment will now automatically load on enter/exit of project directory
-# To load automatically
+# To load manually
 pyenv activate <name>
 pyenv deactivate <name>
 ```
@@ -86,8 +96,7 @@ pyenv deactivate <name>
 ### Managing environments
 
 ```sh
-# List all environments
-# Note the active environment is flagged with a *
+# List all environments ( active marked with * )
 conda env list
 
 # Removing an environment
@@ -109,10 +118,17 @@ conda env create -f environment.yml
 
 ## Pipenv 101
 
+Pipenv can be configured to use pyenv for python version management through the `PIPENV_PYTHON`
+environment variable.
+
 ### NOTE 20181119
 
 Using `pipenv install` to create a env pipenv environment using pyenv managed python no longer appears to work.
 Use `pipenv --python $(pyenv which python)` instead.
+
+Pipenv will install from a `Pipfile` if present in the executing directory.
+
+Pipenv generates a `Pipfile` and `Pipfile.lock` file. Both of these should be added to source control.
 
 ### Standard workflow
 
@@ -121,17 +137,12 @@ Use `pipenv --python $(pyenv which python)` instead.
 mkdir <project> && cd $_
 
 # Initialize Pipenv
-# Note will install from a Pipfile if present
-# If PIPENV_PYTHON environment variable is set it will will pyenv Python version
-# Else provide python version explicitly using --python option
-# Will generate Pipfile and Pipefile.lock files, both of which should be added to source control
-pipenv install --python <version>
+pipenv install [--python <version>]
 
 # Install production dependencies
 pipenv install <package>
 
-# Install development dependencies
-# E.g. unit testing packages
+# Install development dependencies. E.g. unit testing packages
 pipenv install --dev <package>
 
 # Generate Pipfile listing all project dependencies
@@ -173,8 +184,6 @@ mkdir foo && cd $_
 pyenv local 3.7.1
 
 # Create pipenv environment
-# Override Python version using --python option
-# ( $PIPENV_PYTHON environment variable )
 pipenv install --python `pyenv which python`
 
 # Install dependencies
@@ -191,6 +200,9 @@ pipenv shell
 
 Note that the `jupyter` package installs both `notebook` and `ipykernel` as dependencies.
 
+Jupyter server is configured using the following file:
+`~/.jupyter/jupyter_notebook_config.py`
+
 ### Conda environment workflow
 
 From within your activated conda environment:
@@ -202,7 +214,6 @@ conda install -y jupyter
 conda install -y nb_conda
 
 # Launch the Jupyter server
-# Pulls in configuration from ~/.jupyter/jupyter_notebook_config.py
 jupyter notebook
 ```
 
@@ -238,8 +249,11 @@ Note that `pyenv-virtualenv` is being used for a couple of explicit reasons rela
 ### Using VirtualEnv for virtual environment management
 
 ```sh
+# List virtual environments
+pyenv virtualenvs
+
 # Create project virtualenv
-pyenv virtualenv <version> <name>
+pyenv virtualenv [<version>] <name>
 
 # To manually activate / deactive the virtual environment
 pyenv activate <name>
@@ -255,7 +269,7 @@ This helps preserve the system python by preventing packages being directly inst
 ```sh
 pyenv virtualenv 3.7.1 globalenv
 pyenv activate
-pip install <package>
+pip install <package> ...
 pyenv deactivate
 pyenv global 3.7.1 globalenv
 ```
@@ -268,7 +282,8 @@ Python is used in several ways on a development machine:
 - Project-level development dependencies, such as testing frameworks;
 - Machine-wide development dependencies, such as the AWS cli, Powerline, etc;
 
-All use of Python outside of the latter are performed at the project level and can be isolated from system python through pyenv and pipenv.
+All use of Python outside of the latter are performed at the project level and can be isolated from system
+python through pyenv and pipenv.
 
 Machine-wide usage of Python is more problematic. The following approaches are possible:
 
@@ -276,9 +291,29 @@ Machine-wide usage of Python is more problematic. The following approaches are p
 - Usage of Python version managed through pyenv
 - Usage of Python virtual environment through virtualenv
 
-Where-ever possible the system Python should be preserved - i.e. neither updated nor have any pip packaged installed into it. Therefore any approach will need to use a version of Python managed by pyenv.
+#### System Python
 
-As far as isolation is concerned, the ideal solution would be to use a global virtual environment in addition to a pyenv managed Python version. This would allow global Python packages to be installed into a dedicated virtual environment, therefore keeping the associated pyenv Python version clean. For example:
+Where-ever possible the system Python should be preserved.
+
+This is especially important with MacOS where Homebrew installed Python versions affectively
+trash the system python version and hence break anything with a dependency on the system Python.
+
+However, with Linux the system Python is managed through through the distro package manager.
+In addition, major Python versions are distributed through different packages and referenced through
+individual names ( e.g. `python3` ).
+
+This makes it possible to install and upgrade system Python versions through the distro package
+manager without too much risk.
+Packages can then be installed into the system python at the user level using the `--user` pip flag,
+hence avoiding `sudo` requirements whilst also preventing packages contaminating other accounts.
+
+As the system Python and Python versions managed through pyenv are completely separate, packages installed
+into the system Python are accessible from any pyenv managed Python version or virtual environment.
+This makes system Python a perfect choice for the global Python environment.
+
+#### Global virtual environment
+
+Alternatively, a pyenv managed virtual environment could be used to provide isolation from the system Python.
 
 ```sh
 pyenv virtualenv 3.7.1 globalenv
@@ -286,17 +321,22 @@ pyenv activate
 pip install awscli
 pyenv deactivate
 # Set global Python, including a reference to the global env
-pyenv global 3.7.1 globalenv
+pyenv global system globalenv
 ```
 
-However, for this to work, the global virtual environment would need to be referenced by the local python version in order for it to resolve global packages. This then leads to the global virtual environment becoming a development dependency through it being referenced in the project-level .python-version file. For example:
+However, for this to work the global virtual environment would need to be referenced by local python versions
+in order for it to resolve global packages. This then leads to the global virtual environment becoming a development
+dependency through it being referenced in the project-level `.python-version` file. For example:
 
 ```sh
 pyenv local 3.7.1 globalenv
 cat .python-version # references globalenv
 ```
 
-This leaves the remaining option of just installing Python packages directly into a pyenv managed Python version and using this Python version globally. For example:
+#### Pyenv managed global Python version
+
+Another approach could be to use a pyenv managed Python version globally, into which all global python packages
+are installed:
 
 ```sh
 pyenv global 3.7.1
@@ -305,9 +345,12 @@ pip install awscli
 
 Any project-level dependency on Python 3.7.1 ( in the above case ) can access the globally installed packages.
 
-However, for this to work, all global packages need to be installed into all Python versions installed through pyenv. E.g. in the above case Python 3.7.0 projects would not be able to access the awscli package.
+For this to work, all global packages need to be installed into all Python versions installed through pyenv.
+E.g. in the above case Python 3.7.0 projects would not be able to access the awscli package.
+It is possible to automate the installation of packages into pyenv managed Python environments through a pyenv plugin.
 
-Note that from the perspective of a development machine, and unlike the system Python, there is no particular need to keep pyenv managed Python versions clean of global dependencies. The Python version is both a runtime and a development environment, with the key issue being able to prevent the latter from affecting the specification of the former. And at the end of the day, Python versions managed with pyenv can be removed and reinstalled with ease.
+However, this leads to the packages in the global Python becoming dependencies of local Python versions.
+As they are installed into the local Python version, they also appear in the associated pip requirements file.
 
 ### Using conda with pyenv
 
@@ -342,15 +385,15 @@ This creates a pyenv version for miniconda that is actually a virtual environmen
 pyenv virtualenvs
 ```
 
-However, conda environments from within this conda Python version do not appear as virtual environments.
+However, conda environments created from within this conda Python version do not appear as virtual environments.
 For example, the following will not create any additional virtual environments:
 
 ```sh
 pyenv activate <name>
-echo $VIRTUAL_ENV   # points to <name>
+echo $VIRTUAL_ENV       # points to <name>
 conda create -yn <env>
-echo $VIRTUAL_ENV   # still points to <name>
-pyenv virtualenvs   # <env> not listed
+echo $VIRTUAL_ENV       # still points to <name>
+pyenv virtualenvs       # <env> not listed
 ```
 
 This causes issues with Powerline, as it uses the following quasi-logic to determine the enviromnment name to display:

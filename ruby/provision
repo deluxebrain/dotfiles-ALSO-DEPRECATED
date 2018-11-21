@@ -31,9 +31,9 @@ echo "Installing latest stable ruby version" >&2
 # 0: only verified
 # 1: allow missing checksums
 # 2: allow failed checksums
-rvm install ruby --latest --verify-downloads 1
+rvm install --latest --verify-downloads 1 ruby
 
 # Set default ruby version
 # Switch back using:
 # rvm use system
-rvm use ruby --default
+rvm use --default ruby

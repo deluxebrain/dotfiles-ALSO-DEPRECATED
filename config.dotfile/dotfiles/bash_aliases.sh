@@ -39,6 +39,12 @@ alias cp="cp -i"
 alias mv="mv -i"
 alias mkdir="mkdir -p"
 
+# Clipboard
+#
+
+alias pbcopy="xclip -selection clipboard"
+alias pbpaste="xclip -selection clipboard -out"
+
 # Search
 #
 

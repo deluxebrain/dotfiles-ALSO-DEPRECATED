@@ -11,15 +11,15 @@ function source_bash_files()
 
     # Notes:
     # RVM requires PATH to be frozen before initialization
-    # powerline must be started before pyenv
+    # Powerline must be started before pyenv
     local -r -a files=(
         "bash_options.sh"
         "bash_aliases.sh"
         "bash_ssh-agent.sh"
         "bash_nvm.sh"
-        "bash_rvm.sh"
         "bash_powerline.sh"
         "bash_pyenv.sh"
+        "bash_rvm.sh"
         "bash_autocomplete.sh"
     )
 
