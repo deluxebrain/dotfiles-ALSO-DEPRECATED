@@ -11,14 +11,15 @@ function source_bash_files()
 
     # Notes:
     # RVM requires PATH to be frozen before initialization
+    # powerline must be started before pyenv
     local -r -a files=(
         "bash_options.sh"
         "bash_aliases.sh"
         "bash_ssh-agent.sh"
         "bash_nvm.sh"
-        "bash_pyenv.sh"
         "bash_rvm.sh"
         "bash_powerline.sh"
+        "bash_pyenv.sh"
         "bash_autocomplete.sh"
     )
 
@@ -26,12 +27,16 @@ function source_bash_files()
     # expand array keys into separate words
     for idx in "${!files[@]}"; do
         file="${files[$idx]}"
-        [ -f "$DOTFILES_CONFIG_HOME/$file" ] && { \
-            source "$DOTFILES_CONFIG_HOME/$file" || return ; }
+        [ -f "$DOTFILES_CONFIG_HOME/$file" ] &&
+            source "$DOTFILES_CONFIG_HOME/$file"
+        if (( $? != 0 )) ; then
+            echo "ERROR: Unhandled exception in $file"
+        fi
     done
 }
 
-# Run the following regarding of shell type
+# Run the following regardless of shell type
+# ( interactive / non-interactive )
 source "$DOTFILES_CONFIG_HOME/bash_exports.sh"
 
 # History

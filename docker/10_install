@@ -46,7 +46,7 @@ sudo apt-get update -y
 # Install Docker CE
 # This will create the docker group
 # and setup the docker service to autostart
-sudo apt-get install docker-ce
+sudo apt-get install -y docker-ce
 
 # Add current user to docker group
 # Note this wont take affect until subsequent login

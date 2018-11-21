@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Start RVM
+# Not in interactive shell so need to boostrap RVM
+# ( see shell dotfiles )
 source "$DOTFILES_CONFIG_HOME/bash_rvm.sh"
 
 echo "Provisioning rvm environment" >&2

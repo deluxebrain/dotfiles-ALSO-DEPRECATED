@@ -2,6 +2,9 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
 # Packages to allow apt to use repositories over https
 sudo apt-get install -y \
     apt-transport-https \
@@ -17,7 +20,9 @@ sudo apt-get install -y \
 # Compilation
 sudo apt-get install -y \
     make \
+    cmake \
     build-essential \
+    clang\
     libssl-dev \
     zlib1g-dev \
     libbz2-dev \
@@ -26,5 +31,16 @@ sudo apt-get install -y \
     llvm \
     libncurses5-dev \
     libncursesw5-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libc6-dev \
+    libdb-dev \
     xz-utils \
-    tk-dev
+    tk-dev \
+    autoconf \
+    automake \
+    bison \
+    libtool \
+    libyaml-dev \
+    sqlite3 \
+    libgmp-dev

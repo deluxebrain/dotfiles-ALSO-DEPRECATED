@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# HACK until pyenv / pyenv-virtualenv integration with conda is fixed
+# See: https://github.com/pyenv/pyenv-virtualenv/issues/178
+
+# Not in interactive shell so need to boostrap PyEnv
+# ( see shell dotfiles )
+source "$DOTFILES_CONFIG_HOME/bash_pyenv.sh"
+
+# Create a hook to fire whenever a virtualenv is created
+# This will fire whenever a venv is created using a *conda* python version
+mkdir -p "$(pyenv root)/pyenv.d/virtualenv" || exit
+cat << 'EOF' > "$(pyenv root)/pyenv.d/virtualenv/after.bash"
+after_virtualenv "BASE_VERSION=\"$(echo $VIRTUALENV_NAME | awk -F/ '{print $(NF-2)}')\""
+after_virtualenv "VENVNAME=\"$(echo $VIRTUALENV_NAME | awk -F/ '{print $(NF)}')\""
+after_virtualenv 'CONDA=${PYENV_ROOT}/versions/${BASE_VERSION}/bin/conda'
+after_virtualenv 'ACTIVATE=${PYENV_ROOT}/versions/${BASE_VERSION}/bin/activate'
+
+after_virtualenv 'if [[ $BASE_VERSION = *"conda"* ]]; then echo "...linking conda and activate"; fi'
+after_virtualenv 'if [[ $BASE_VERSION = *"conda"* ]]; then ln -s ${CONDA} ${PYENV_ROOT}/versions/${VENVNAME}/bin/; fi'
+after_virtualenv 'if [[ $BASE_VERSION = *"conda"* ]]; then ln -s ${ACTIVATE} ${PYENV_ROOT}/versions/${VENVNAME}/bin/; fi'
+EOF

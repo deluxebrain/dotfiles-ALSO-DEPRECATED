@@ -12,3 +12,9 @@ git clone https://github.com/pyenv/pyenv.git "$PYENV_ROOT"
 # pyenv-virtualenv
 git clone https://github.com/pyenv/pyenv-virtualenv.git \
     "${PYENV_ROOT}/plugins/pyenv-virtualenv"
+
+# NO LONGER USED
+# pyenv default package installer
+# auto installs default packages after any pyenv install
+true || git clone https://github.com/jawshooah/pyenv-default-packages.git \
+    "${PYENV_ROOT}/plugins/pyenv-default-packages"

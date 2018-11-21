@@ -94,8 +94,6 @@ function find_and_run_installers()
       # exclude subdirectories that are git submodules
       dir_is_submodule "$(dirname "$installer")" && continue
 
-      echo "$installer" && continue
-
       # redirect stdin otherwise installers can hang
       # ( something todo with being in a while loop ? )
       if $ARG_RUN_AS_USER; then

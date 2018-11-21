@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Start nvm
+# Not in interactive shell so need to boostrap NVM
+# ( see shell dotfiles )
 source "$DOTFILES_CONFIG_HOME/bash_nvm.sh"
 
 echo "Provisioning NodeJS environment" >&2

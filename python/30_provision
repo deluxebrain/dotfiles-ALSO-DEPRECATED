@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Setup default packages that will be installed with each new Python version
+
+# NO LONGER USED
+true; return
+
+# Setup default packages that will be installed with each new Python version
+cat << EOF >> "`pyenv root`/default-packages"
+pip>=18.0
+pipenv
+awscli
+# tmux session manager
+tmuxp
+# Docker SDK for Python
+docker
+powerline-status
+powerline-docker
+EOF

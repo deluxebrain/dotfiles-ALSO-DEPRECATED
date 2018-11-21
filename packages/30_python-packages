@@ -2,6 +2,22 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-# DO NOT install any python / pip versions outside of pyenv
+# Install global python environment
+sudo apt-get install -y \
+    python \
+    python-pip
 
-:
+# Absolute bare minimum pip packages to support global environment
+# NOTE: Ensure installed with --user
+pip install --user pipenv
+pip install --user awscli
+pip install --user tmuxp            # tmux session manager
+pip install --user docker           # Docker SDK for Python
+pip install --user powerline-status # Powerline
+pip install --use powerline-docker
+
+# Powerline fonts
+# Note: Powerline is installed through pip instead of apt
+# as the apt version has dependencies on python
+sudo apt-get install -y \
+    fonts-powerline

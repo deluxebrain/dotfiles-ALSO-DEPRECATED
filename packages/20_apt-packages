@@ -6,12 +6,9 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get install -y \
     jq \
     zip \
-    gnupg2
-
-# Powerline
-sudo apt-get install -y \
-    powerline \
-    fonts-powerline
+    gnupg2 \
+    tree \
+    silversearcher-ag
 
 # Virtualization
 sudo apt-get install -y \

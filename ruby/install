@@ -10,7 +10,8 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 # Import rvm public key to enable package verification
-gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+gpg2 --keyserver hkp://keys.gnupg.net \
+    --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
 gpg2 --refresh-keys
 # Trust the key
 echo 409B6B1796C275462A1703113804BB82D39DC0E3:6: \

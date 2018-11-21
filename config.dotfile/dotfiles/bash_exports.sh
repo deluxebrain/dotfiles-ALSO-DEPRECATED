@@ -19,6 +19,7 @@ export NODE_REPL_HISTORY_SIZE=10000
 # Python
 # PyEnv
 export PYENV_ROOT="$HOME/.pyenv"
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 # Configure Pipenv to integrate with PyEnv to determine Python version
 export PIPENV_PYTHON="$PYENV_ROOT/shims/python"
 # Set Python to use UTF-8 encoding for stdout/stdin/stderr
