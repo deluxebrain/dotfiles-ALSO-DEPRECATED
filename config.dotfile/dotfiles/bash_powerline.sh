@@ -1,4 +1,6 @@
-! command -v powerline-daemon >/dev/null 2>&1 && return
+if ! command -v powerline-daemon >/dev/null 2>&1; then
+    true; exit
+fi
 
 export POWERLINE_BASH_CONTINUATION=1
 export POWERLINE_BASH_SELECT=1

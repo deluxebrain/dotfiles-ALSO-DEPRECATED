@@ -3,7 +3,7 @@
 # Setup default packages that will be installed with each new Python version
 
 # NO LONGER USED
-true || return
+exit
 
 # Setup default packages that will be installed with each new Python version
 cat << EOF >> "`pyenv root`/default-packages"
