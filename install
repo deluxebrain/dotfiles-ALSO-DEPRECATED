@@ -21,7 +21,7 @@ export VAR_USER_EMAIL=
 
 # User prompts
 # GLOBAL_VAR (ref),question
-PROMPTS=(  
+PROMPTS=(
   "VAR_USER_NAME,Please enter your user name"
   "VAR_USER_EMAIL,Please enter your email address"
 )
@@ -93,7 +93,7 @@ function prompt()
 function confirm()
 (
   # Loop until y/n answer given
-  while ! [[ $REPLY =~ ^[yYnN]$ ]]; do 
+  while ! [[ $REPLY =~ ^[yYnN]$ ]]; do
     read -r -p "$1? (y/n):"
   done
   [[ $REPLY =~ ^[yY]$ ]]
@@ -106,7 +106,7 @@ function confirm()
 #   stdout: User response
 function prompt_and_confirm()
 (
-  local response 
+  local response
 
   # Loop until response has been given and confirmed
   while true; do
@@ -139,14 +139,14 @@ function get_user_config()
 {
   local idx prompt prompt_var_ref prompt_message
   # "${!name[@]}"
-  # expand array keys into separate words  
+  # expand array keys into separate words
   for idx in "${!PROMPTS[@]}"; do
     IFS=','; prompt=(${PROMPTS[$idx]})
     prompt_var_ref="${prompt[0]}"
 
     # Check if variable has been set
     # ${!ref}
-    # Use indirection to reference variable by name in a separate variable    
+    # Use indirection to reference variable by name in a separate variable
     if [ -z "${!prompt_var_ref}" ]; then
       prompt_msg="${prompt[1]}"
       # use `read` to dynamically set variable based on its name
@@ -171,7 +171,7 @@ function main()
   fi
 
   # Administrative activities not directly relating to installation
-  echo "Initializing installation" >&2  
+  echo "Initializing installation" >&2
   init || return
 
   # Get all user configuration that has not been explicitly set by options
@@ -189,7 +189,7 @@ function main()
   echo "Installing dotfiles" >&2
   ./scripts/setup-dotfiles \
     -o "$ARG_OPTION" \
-    -g "$DOTFILES_GROUP" || return  
+    -g "$DOTFILES_GROUP" || return
 
   # Install packages
   echo "Running package installers" >&2
@@ -197,18 +197,18 @@ function main()
     | sort \
     | while read file; do
       echo "... Running package installer $file" >&2
-      "./packages/${file}" || return
-    done  
+      ./packages/"${file}" || return
+      done
 
   # Run installers
   # -u: Run as user so as to pull in new environment
   echo "Running installers" >&2
   ./scripts/setup-installers -u "install" || return
 
-  # Run provisioners  
+  # Run provisioners
   # -u: Run as user so as to pull in new environment
   if $ARG_PROVISION; then
-    echo "Running provisioners" >&2    
+    echo "Running provisioners" >&2
     ./scripts/setup-installers -u "provision" || return
   fi
 }

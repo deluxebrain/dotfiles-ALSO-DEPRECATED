@@ -19,28 +19,4 @@ sudo apt-get install -y \
 
 # Compilation
 sudo apt-get install -y \
-    make \
-    cmake \
-    build-essential \
-    clang\
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    llvm \
-    libncurses5-dev \
-    libncursesw5-dev \
-    libgdbm-dev \
-    liblzma-dev \
-    libc6-dev \
-    libdb-dev \
-    xz-utils \
-    tk-dev \
-    autoconf \
-    automake \
-    bison \
-    libtool \
-    libyaml-dev \
-    sqlite3 \
-    libgmp-dev
+    build-essential

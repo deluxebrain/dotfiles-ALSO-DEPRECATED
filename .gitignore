@@ -3,15 +3,18 @@
 
 # Vagrant
 boxes/*
-/.vagrant
+.vagrant/*
 *.log
 .vagrantuser
 
 # Jupyter
 jupyter.dotfile/migrated
 
-# xdg compliant config
+# XDG compliant config
 config.dotfile/*
 !config.dotfile/README.md
 !config.dotfile/powerline
 !config.dotfile/dotfiles
+
+# IDEs
+.vscode/*

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Not in interactive shell so need to boostrap PyEnv
+# ( see shell dotfiles )
+source "$DOTFILES_CONFIG_HOME/bash_pyenv.sh"
+
+# Absolute bare minimum pip packages to support global environment
+# NOTE: Ensure installed with --user
+# NOTE: Relies on PATH being set correctly
+echo "Installing system python packages" >&2
+pip install --user pipenv
+pip install --user awscli
+pip install --user tmuxp              # tmux session manager
+pip install --user docker             # Docker SDK for Python
+pip install --user powerline-status   # Powerline
+pip install --user powerline-docker

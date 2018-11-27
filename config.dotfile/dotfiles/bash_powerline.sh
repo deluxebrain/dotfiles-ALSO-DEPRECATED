@@ -1,4 +1,4 @@
-command -v powerline-daemon >/dev/null 2>&1 || return
+! command -v powerline-daemon >/dev/null 2>&1 && return
 
 export POWERLINE_BASH_CONTINUATION=1
 export POWERLINE_BASH_SELECT=1

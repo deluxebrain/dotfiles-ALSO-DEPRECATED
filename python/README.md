@@ -1,5 +1,7 @@
 # Python
 
+[https://xkcd.com/1987/]
+
 ## Overview of tools
 
 These tools are used to solve the following problems associated with Python development - managing muliple versions of Python on the same system, and providing project-level isolation of Python dependencies.
@@ -118,13 +120,12 @@ conda env create -f environment.yml
 
 ## Pipenv 101
 
+> NOTE 20181119
+> Using `pipenv install` to create a env pipenv environment using pyenv managed python no longer appears to work.
+> Use `pipenv --python $(pyenv which python)` instead.
+
 Pipenv can be configured to use pyenv for python version management through the `PIPENV_PYTHON`
 environment variable.
-
-### NOTE 20181119
-
-Using `pipenv install` to create a env pipenv environment using pyenv managed python no longer appears to work.
-Use `pipenv --python $(pyenv which python)` instead.
 
 Pipenv will install from a `Pipfile` if present in the executing directory.
 
@@ -229,7 +230,53 @@ pipenv run jupyter notebook
 
 ## Notes
 
-### pyenv-virtualenv
+### Upgrading Pip
+
+Pip 10 was introduced in 2018 and included a lot of breaking changes.
+
+As of writing, Pip installed through `apt` is still on version 9 and is installed here: `/usr/bin/pip`.
+
+Upgrading Pip using Pip ( and hence outside of `apt` ), can be done as follows:
+
+```sh
+pip install --upgrade pip
+
+```
+
+This installs the latest version of Pip ( as of writing, version 18 ) into the following location: `$HOME/.local/bin/pip`.
+
+I.e. you end up with two versions of pip that are not compatible. By default, the path will resolve the version of pip in `/usr/bin`.
+
+This can be manage in one of two ways:
+
+- Never upgrade pip outside of `apt`
+- Add '/$HOME/.local/bin/pip' to the path before `/usr/bin`.
+
+The second approach is required anyway to support `pip install --user` and hence is the preferred approach.
+
+This leads to the following important caveat: Pip packages should not be installed until the path has been configured to prepend the local path.
+
+### Pipenv and its interaction with system Python
+
+> More information here: [https://github.com/pypa/pipenv/issues/2122]
+
+Pipenv has a dependency on Pip. Importantly, it also appears to manages this dependency itself.
+
+For example:
+
+```sh
+which pip           # /usr/bin/pip
+pip install pipenv
+which pip           # ~/.local/bin/pip
+```
+
+I.e. the installation of Pipenv appears to lead to an upgrade of Pip outside of `apt`.
+
+Note that the installation of Pipenv will therefore fail if the path is not set correctly to resolve `$HOME/.local/bin` ahead of `/usr/bin`.
+
+This leads to the following important caveat: Pipenv should not be installed until after the path os set to prepend the local path.
+
+### Use of pyenv-virtualenv
 
 Plugin for `pyenv` to provide `virtualenv` and `conda` environments for Python.
 These provide isolated working copies of Python which prevent one project and its dependencies affecting another.
@@ -274,85 +321,12 @@ pyenv deactivate
 pyenv global 3.7.1 globalenv
 ```
 
-### Creating global Python environment
-
-Python is used in several ways on a development machine:
-
-- As a project runtime within Python projects;
-- Project-level development dependencies, such as testing frameworks;
-- Machine-wide development dependencies, such as the AWS cli, Powerline, etc;
-
-All use of Python outside of the latter are performed at the project level and can be isolated from system
-python through pyenv and pipenv.
-
-Machine-wide usage of Python is more problematic. The following approaches are possible:
-
-- Direct usage of the system Python
-- Usage of Python version managed through pyenv
-- Usage of Python virtual environment through virtualenv
-
-#### System Python
-
-Where-ever possible the system Python should be preserved.
-
-This is especially important with MacOS where Homebrew installed Python versions affectively
-trash the system python version and hence break anything with a dependency on the system Python.
-
-However, with Linux the system Python is managed through through the distro package manager.
-In addition, major Python versions are distributed through different packages and referenced through
-individual names ( e.g. `python3` ).
-
-This makes it possible to install and upgrade system Python versions through the distro package
-manager without too much risk.
-Packages can then be installed into the system python at the user level using the `--user` pip flag,
-hence avoiding `sudo` requirements whilst also preventing packages contaminating other accounts.
-
-As the system Python and Python versions managed through pyenv are completely separate, packages installed
-into the system Python are accessible from any pyenv managed Python version or virtual environment.
-This makes system Python a perfect choice for the global Python environment.
-
-#### Global virtual environment
-
-Alternatively, a pyenv managed virtual environment could be used to provide isolation from the system Python.
-
-```sh
-pyenv virtualenv 3.7.1 globalenv
-pyenv activate
-pip install awscli
-pyenv deactivate
-# Set global Python, including a reference to the global env
-pyenv global system globalenv
-```
-
-However, for this to work the global virtual environment would need to be referenced by local python versions
-in order for it to resolve global packages. This then leads to the global virtual environment becoming a development
-dependency through it being referenced in the project-level `.python-version` file. For example:
-
-```sh
-pyenv local 3.7.1 globalenv
-cat .python-version # references globalenv
-```
-
-#### Pyenv managed global Python version
-
-Another approach could be to use a pyenv managed Python version globally, into which all global python packages
-are installed:
-
-```sh
-pyenv global 3.7.1
-pip install awscli
-```
-
-Any project-level dependency on Python 3.7.1 ( in the above case ) can access the globally installed packages.
-
-For this to work, all global packages need to be installed into all Python versions installed through pyenv.
-E.g. in the above case Python 3.7.0 projects would not be able to access the awscli package.
-It is possible to automate the installation of packages into pyenv managed Python environments through a pyenv plugin.
-
-However, this leads to the packages in the global Python becoming dependencies of local Python versions.
-As they are installed into the local Python version, they also appear in the associated pip requirements file.
-
 ### Using conda with pyenv
+
+> NOTE 20181119
+> Due to a bug with pyenv / pyenv-virtualwrapper, the above approach to managing conda virtual environment using pyenv-virtualenv does not work.
+> See here: [https://github.com/pyenv/pyenv-virtualenv/issues/178]
+> The suggested solution is implemented in the Python provisioner.
 
 As per all Python versions, conda is installed through pyenv.
 
@@ -416,11 +390,81 @@ pyenv local <name>
 conda env list
 ```
 
-#### NOTE 20181119
+## Creating global Python environments
 
-Due to a bug with pyenv / pyenv-virtualwrapper, the above approach to managing conda virtual environment using
-pyenv-virtualenv does not work.
+Python is used in several ways on a development machine:
 
-See here: https://github.com/pyenv/pyenv-virtualenv/issues/178
+- As a project runtime within Python projects;
+- Project-level development dependencies, such as testing frameworks;
+- Machine-wide development dependencies, such as the AWS cli, Powerline, etc;
 
-The suggested solution is implemented in the Python provisioner.
+All use of Python outside of the latter are performed at the project level and can be isolated from system
+python through pyenv and pipenv.
+
+Machine-wide usage of Python is more problematic. The following approaches are possible:
+
+- Direct usage of the system Python
+- Usage of Python version managed through pyenv
+- Usage of Python virtual environment through virtualenv
+
+### System Python
+
+Where-ever possible the system Python should be preserved.
+
+This is especially important with MacOS where Homebrew installed Python versions affectively
+trash the system python version and hence break anything with a dependency on the system Python.
+
+However, with Linux the system Python is managed through through the distro package manager.
+In addition, major Python versions are distributed through different packages and referenced through
+individual names ( e.g. `python3` ).
+
+This makes it possible to install and upgrade system Python versions through the distro package
+manager without too much risk.
+Packages can then be installed into the system python at the user level using the `--user` pip flag,
+hence avoiding `sudo` requirements whilst also preventing packages contaminating other accounts.
+
+As the system Python and Python versions managed through pyenv are completely separate, packages installed
+into the system Python are accessible from any pyenv managed Python version or virtual environment.
+This makes system Python a perfect choice for the global Python environment.
+
+### Global virtual environment
+
+Alternatively, a pyenv managed virtual environment could be used to provide isolation from the system Python.
+
+```sh
+pyenv virtualenv 3.7.1 globalenv
+pyenv activate
+pip install awscli
+pyenv deactivate
+# Set global Python, including a reference to the global env
+pyenv global system globalenv
+```
+
+However, for this to work the global virtual environment would need to be referenced by local python versions
+in order for it to resolve global packages. This then leads to the global virtual environment becoming a development
+dependency through it being referenced in the project-level `.python-version` file. For example:
+
+```sh
+pyenv local 3.7.1 globalenv
+cat .python-version # references globalenv
+```
+
+### Pyenv managed global Python version
+
+Another approach could be to use a pyenv managed Python version globally, into which all global python packages
+are installed:
+
+```sh
+pyenv global 3.7.1
+pip install awscli
+```
+
+Any project-level dependency on Python 3.7.1 ( in the above case ) can access the globally installed packages.
+
+For this to work, all global packages need to be installed into all Python versions installed through pyenv.
+E.g. in the above case Python 3.7.0 projects would not be able to access the awscli package.
+It is possible to automate the installation of packages into pyenv managed Python environments through a pyenv plugin.
+
+However, this leads to the packages in the global Python becoming dependencies of local Python versions.
+As they are installed into the local Python version, they also appear in the associated pip requirements file.
+

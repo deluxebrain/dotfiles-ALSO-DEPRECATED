@@ -2,19 +2,18 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Install global python environment
+# /usr/local/bin
+# ~/.local/bin/pip
+
+# DO NOT INSTALL PIP PACKAGES UNTIL PATH HAS BEEN SET
+
+# Install Python for use as pyenv system version
+# Note that Python 3 installs as python3 which prevent
+# pyenv from locating it, hence stick with Python 2
+echo "Installing system python" >&2
 sudo apt-get install -y \
     python \
     python-pip
-
-# Absolute bare minimum pip packages to support global environment
-# NOTE: Ensure installed with --user
-pip install --user pipenv
-pip install --user awscli
-pip install --user tmuxp            # tmux session manager
-pip install --user docker           # Docker SDK for Python
-pip install --user powerline-status # Powerline
-pip install --use powerline-docker
 
 # Powerline fonts
 # Note: Powerline is installed through pip instead of apt
