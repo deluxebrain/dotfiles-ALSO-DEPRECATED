@@ -1,5 +1,5 @@
 if ! command -v powerline-daemon >/dev/null 2>&1; then
-    true; exit
+    true; return
 fi
 
 export POWERLINE_BASH_CONTINUATION=1

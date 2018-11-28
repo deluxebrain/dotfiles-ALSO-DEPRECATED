@@ -49,7 +49,7 @@ HISTFILESIZE=10000
 PATH="$HOME/bin:$PATH"
 PATH="$PYENV_ROOT/bin:$PATH"
 # Used for python packages when using pip --user
-PATH="$HOME/.local/bin:$PATH"
+# PATH="$HOME/.local/bin:$PATH"
 # RVM - must be last PATH change
 PATH="$PATH:$HOME/.rvm/bin"
 

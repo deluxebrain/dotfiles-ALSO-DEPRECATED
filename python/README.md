@@ -1,10 +1,185 @@
 # Python
 
-[https://xkcd.com/1987/]
+## Python development environments
 
-## Overview of tools
+... without destroying your system in the process [https://xkcd.com/1987/]
 
-These tools are used to solve the following problems associated with Python development - managing muliple versions of Python on the same system, and providing project-level isolation of Python dependencies.
+To define the scope of a Python development environment, it should provide the following:
+
+First, support for the development of multiple Python projects on the same system.
+Projects need to be isolated from each other to allow for differing Python versions
+and package dependencies to be specified at the project level.
+
+Secondly, support for global development tooling which can be shared across Python projects.
+Global tooling should remain isolated from Python projects, and not lead to dependencies with the
+Python version nor package dependencies within the Python projects themselves.
+
+### System Python
+
+System Python is defined as the version of Python and its associated ecosystem that is packaged with
+the OS distribution or that is distributed by the official distribution package manager.
+
+On Ubuntu, the official system Python ecosystem is as follows:
+
+```sh
+which python
+# /usr/bin/python
+
+which pip
+# /usr/bin/pip
+```
+
+Some OS distributions come packaged with components that have a dependency on Python.
+These dependencies would be fulfilled by the system Python as defined above.
+
+The system Python ecosystem does not natively support the side-by-side installation of different versions,
+nor allow for project-level scoping of packages.
+
+Therefore unconsidered use of Python can lead to coupling of Python development environments,
+and damage to the system Python.
+
+### An example of how to break System Python
+
+Consider a system which has system Python and pip installed:
+
+```sh
+sudo apt-get install -y Python
+sudo apt-get install -y pip
+```
+
+The Python ecosystem will be installed as `system` as follows:
+
+```sh
+which python
+# /usr/bin/python
+
+which pip
+# /usr/bin/pip
+```
+
+At this stage, the Python ecosystem will be working as expected. For example:
+
+```sh
+pip install --user awscli
+aws --version
+```
+
+However, observe what happens if we attempt to upgrade pip outside of the system Python ecosystem:
+
+```sh
+pip install --upgrade pip
+pip install --user powerline-status
+# Error
+```
+
+The upgrade of pip leads to a new version of pip being installed in the following location:
+`$HOME/.local/bin/pip`.
+
+This location is not by default on the path and hence Python continues to use the system version.
+Due to breaking changes between system pip and later pip versions, this leads to the errors above.
+
+In this case, the issue can be resolved by updating the path as follows:
+
+```sh
+PATH="$HOME/.local/bin:$PATH"
+```
+
+### Three aspects of a Python development environment
+
+The following three aspects of the system Python ecosystem define the requirements for
+a Python development environment:
+
+#### System Python should remain the default Python version
+
+System components with a dependency on Python require the system Python to be the default version,
+regardless the context of their execution.
+
+To be explict, no manipulation of the path should be required for this to be the case.
+
+Consider a counter example where pip has been installed outside of the system Python ecosystem.
+In this case, the newer version of pip will be installed alongside the system pip version.
+This will affectively break all system pip usage unless the path is explicitly set to resolve to the newer version.
+
+Python versions managed as part of the Python development environment should therefore require
+explicit activiation and be scoped to the current environment.
+
+#### System Python is only differentiable at the major version number
+
+Official OS package managers distribute Python 2 and Python 3 as distinct packages. For example:
+
+```sh
+sudo apt-get install -y python
+sudo apt-get install -y python3
+
+which python
+# /usr/bin/python
+
+which python3
+# /usr/bin/python3
+```
+
+Due to the nature of the packaging, system Python versions are only differentiable at the major version number.
+
+System components with a dependency on Python can therefore only declare their dependency in terms
+of the Python major version. The minor and patch versions ( and hence the specific Python version )
+is expected to remain consistent with the version the depency was initiall taken again.
+
+For this reason, system Python versions should only ever be upgraded through the official OS package manager,
+which ensures the dependency graph is upgraded atomically.
+
+#### System Python packages have limited scoping
+
+The default Python ecosystem has very limited capabilities to control the scoping of Python packages.
+
+Python packages installed via pip into the system Python are either global to the machine or the user.
+
+This can lead to dependency issues where two Python packages depend on different and incompatble versions
+of the same package. Installing one of these packages will by definition break the other.
+
+For this reason, installation of packages into the sytem Python should be performed sparingly and only
+for packages that are genuinley required at the system or user level.
+
+A Python development environment should therefore allow packages to be specified and scoped at the project level.
+
+Tensorflow would be an example of a bad candidate for a system Python package due to its complex
+dependency graph and the likelihood for different projects to require different versions.
+This should be specified as a project level package.
+
+Powerline would be an example of a good candidate for a sytem Python package as this is a genuine
+global component that is required across projects.
+This should therefore be installed into the system python.
+
+## Approaches for the creation of a Python development environment
+
+Python is used in several ways on a development machine:
+
+- As a project runtime within Python projects;
+- Project-level development dependencies, such as testing frameworks;
+- Machine-wide development dependencies, such as the AWS cli, Powerline, etc;
+
+All use of Python outside of the latter are performed at the project level and can be isolated from system
+python through pyenv and pipenv.
+
+Machine-wide usage of Python is more problematic. The following approaches are possible:
+
+- Direct usage of the system Python
+- Usage of Python version managed through pyenv
+- Usage of Python virtual environment through virtualenv
+
+Pyenv managed Python versions are only accessible after activation of Pyenv, and do not prevent
+the resolution of packages installed into the system Python.
+
+The system Python and Python versions managed through pyenv are therefore completely separate.
+
+Packages can be installed into the system python at the user level using the `--user` pip flag,
+hence avoiding `sudo` requirements whilst also preventing packages contaminating other accounts.
+
+This makes system Python a perfect choice for the global Python environment.
+
+## Tools to support the creation of a Python development environment
+
+These tools are used to solve the following problems associated with Python development;
+managing muliple versions of Python on the same system, and providing project-level isolation of Python dependencies.
 
 1. pyenv
 
@@ -390,44 +565,9 @@ pyenv local <name>
 conda env list
 ```
 
-## Creating global Python environments
+### Approaches to a Python development environment that dont work
 
-Python is used in several ways on a development machine:
-
-- As a project runtime within Python projects;
-- Project-level development dependencies, such as testing frameworks;
-- Machine-wide development dependencies, such as the AWS cli, Powerline, etc;
-
-All use of Python outside of the latter are performed at the project level and can be isolated from system
-python through pyenv and pipenv.
-
-Machine-wide usage of Python is more problematic. The following approaches are possible:
-
-- Direct usage of the system Python
-- Usage of Python version managed through pyenv
-- Usage of Python virtual environment through virtualenv
-
-### System Python
-
-Where-ever possible the system Python should be preserved.
-
-This is especially important with MacOS where Homebrew installed Python versions affectively
-trash the system python version and hence break anything with a dependency on the system Python.
-
-However, with Linux the system Python is managed through through the distro package manager.
-In addition, major Python versions are distributed through different packages and referenced through
-individual names ( e.g. `python3` ).
-
-This makes it possible to install and upgrade system Python versions through the distro package
-manager without too much risk.
-Packages can then be installed into the system python at the user level using the `--user` pip flag,
-hence avoiding `sudo` requirements whilst also preventing packages contaminating other accounts.
-
-As the system Python and Python versions managed through pyenv are completely separate, packages installed
-into the system Python are accessible from any pyenv managed Python version or virtual environment.
-This makes system Python a perfect choice for the global Python environment.
-
-### Global virtual environment
+#### Global virtual environment
 
 Alternatively, a pyenv managed virtual environment could be used to provide isolation from the system Python.
 
@@ -449,7 +589,7 @@ pyenv local 3.7.1 globalenv
 cat .python-version # references globalenv
 ```
 
-### Pyenv managed global Python version
+#### Pyenv managed global Python version
 
 Another approach could be to use a pyenv managed Python version globally, into which all global python packages
 are installed:
@@ -467,4 +607,3 @@ It is possible to automate the installation of packages into pyenv managed Pytho
 
 However, this leads to the packages in the global Python becoming dependencies of local Python versions.
 As they are installed into the local Python version, they also appear in the associated pip requirements file.
-
