@@ -39,20 +39,6 @@ function source_bash_files()
 # ( interactive / non-interactive )
 source "$DOTFILES_CONFIG_HOME/bash_exports.sh"
 
-# History
-# don't put duplicate lines or lines starting with space in the history.
-HISTCONTROL=ignoreboth
-HISTSIZE=10000
-HISTFILESIZE=10000
-
-# Path
-PATH="$HOME/bin:$PATH"
-PATH="$PYENV_ROOT/bin:$PATH"
-# Used for python packages when using pip --user
-# PATH="$HOME/.local/bin:$PATH"
-# RVM - must be last PATH change
-PATH="$PATH:$HOME/.rvm/bin"
-
 # Run the following only if interactive
 if [[ "$-" == *i* ]]; then
     source_bash_files

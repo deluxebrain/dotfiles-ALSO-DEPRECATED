@@ -24,3 +24,21 @@ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 export PIPENV_PYTHON="$PYENV_ROOT/shims/python"
 # Set Python to use UTF-8 encoding for stdout/stdin/stderr
 export PYTHONIOENCODING="UTF-8"
+
+# History
+# don't put duplicate lines or lines starting with space in the history.
+export HISTCONTROL=ignoreboth
+export HISTSIZE=10000
+export HISTFILESIZE=10000
+
+# Path
+# User level scripts
+export PATH="$HOME/bin:$HOME/lib:$PATH"
+# Python
+# Pyenv
+export PATH="$PYENV_ROOT/bin:$PATH"
+# Resolve $HOME/.local/bin/pip ahead of /usr/bin/pip
+# Resolve packages installed using pip --user
+export PATH="$HOME/.local/bin:$PATH"
+# RVM - must be last PATH change
+export PATH="$PATH:$HOME/.rvm/bin"
