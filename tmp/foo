@@ -1,3 +1,19 @@
 #!/usr/bin/env bash
 
-id
+PIN="1.2.5"
+PIN_PARTS=( ${PIN//./ })
+
+declare -a VERSIONS=(
+    "1.2.3"
+    "1.2.4"
+    "1.2.5"
+    "1.2.6"
+    "1.2.7"
+)
+
+printf "%s\n" "${VERSIONS[@]}" | \
+awk -F"." \
+    -v major="${PIN_PARTS[0]}" \
+    -v minor="${PIN_PARTS[1]}" \
+    -v patch="${PIN_PARTS[2]}" \
+    '$1 >= major && $2 >= minor && $3 >= patch { print }'

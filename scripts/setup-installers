@@ -143,7 +143,7 @@ done
 COMMAND="$1" ; shift
 
 case "$COMMAND" in
-  install|provision) ARG_ACTION="$COMMAND" ;;
+  pre-install|install|post-install) ARG_ACTION="$COMMAND" ;;
   help) usage ; exit ;;
   *) usage ; exit 1 ;;
 esac

@@ -3,10 +3,14 @@
 # Globals
 ARG_ALL=false               # ARG_ALL ? remote : local
 ARG_DISTRIBUTION=false      # distribution filter specified ?
-DISTRIBUTION=               # distribution filter
+# DISTRIBUTION=             distribution filter
 ARG_LATEST=false            # ARG_LATEST ? only latest : all
 ARG_VERSION=false           # version filter specified ?
-VERSION=                    # version filter
+VERSION_TMPL=               # version filter template
+# ARG_MIN=                  version gt/gte
+# ARG_MAX=                  version lt/lte
+# VERSION_MIN=              version used by gt/gte
+# VERSION_MAX=              version used by lt/lte
 
 # Regexs used to parse PyEnv responses. E.g,
 # pyenv install --list
@@ -30,6 +34,8 @@ function usage()
     usage: $SCRIPT_NAME [-a|--all] [-d|--distribution=<${UNDERLINE}distribution${_UNDERLINE}>]
                         [-h|--help] [-l|--latest]
                         [-v|--version=<${UNDERLINE}version${_UNDERLINE}>]
+                        [--lt[e]=<${UNDERLINE}version${_UNDERLINE}>]
+                        [--gt[e]=<${UNDERLINE}version${_UNDERLINE}>]
                         <command> [<args>]
 
     ${BOLD}OPTIONS${_BOLD}
@@ -46,6 +52,12 @@ function usage()
             Semantic ${UNDERLINE}version${_UNDERLINE} template in form <major>.<minor>.<patch>.
             Supports wildcards, e.g. 3.1.* will filter to lastest 3.1 release.
             Defaults to wildcard filter "*.*.*"
+        --lt[e]
+            Filter all versions to less then [equals] specified version
+            Requires full semantic version to be specified
+        --gt[e]
+            Filter all versions to greater then [equals] specified version
+            Requires full semantic version to be specified
 
     ${BOLD}COMMANDS${_BOLD}
 
@@ -62,8 +74,32 @@ function usage()
 EOF
 }
 
+# $1 <= $2 ? true : false
+# Arguments:
+#   $1: Param 1
+#   $2: Param 2
+# Returns:
+#   0: $1 <= $2
+#   1: $1 > %2
+function ver_lte()
+{
+    [ "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
+}
+
+# $1 = $2 ? true : false
+# Arguments:
+#   $1: Param 1
+#   $2: Param 2
+# Returns:
+#   0: $1 < $2
+#   1: $1 >= %2
+function ver_lt()
+{
+    [ "$1" = "$2" ] && return 1 || ver_lte "$1" "$2"
+}
+
 # Identity function that returns 1 if passed an empty list
-# Arguments: 
+# Arguments:
 #   stdin: _
 # Returns:
 #   stdout: _
@@ -81,6 +117,21 @@ function error_if_empty()
 function identity()
 {
     cat < /dev/stdin
+}
+
+# Forms pyenv-version string
+# Arguments:
+#   $1: Version number
+# Globals:
+#   ARG_DISTRIBUTION
+#   DISTRIBUTION
+# Returns:
+#   pyenv-version
+function form_pyenv_version()
+{
+    $ARG_DISTRIBUTION && \
+        echo "${DISTRIBUTION}-${1}" || \
+        echo "$1"
 }
 
 # Filters PyEnv versions list by distribution
@@ -117,7 +168,7 @@ function extract_distributions()
 
 # Filters semantic version list by version specification
 # Arguments:
-#   stdin: [*VERSION*]
+#   stdin: [VERSION]
 # Globals:
 #   VERSION
 # Returns:
@@ -127,8 +178,10 @@ function filter_by_version()
     local version_pattern
     local -a version_parts
 
-    # replace * with [[:digit:]] ( * needs escaping to prevent globbing )
-    version_pattern="${VERSION//\*/[[:digit:]]}"
+    # replace * with [[:digit:]]*
+    # search '*' needs escaping to prevent globbing
+    # * in replace term allows to multiple matches
+    version_pattern="${VERSION_TMPL//\*/[[:digit:]]*}"
 
     # split version into parts array on IFS
     version_parts=( ${version_pattern//./ } )
@@ -139,19 +192,26 @@ function filter_by_version()
         < /dev/stdin
 }
 
-# Forms pyenv-version string
+# Filters list of versions my selected comparison operator
 # Arguments:
-#   $1: Version number
+#   $1: {lt|lte|gt|gte}
+#   stdin: [VERSION]
 # Globals:
-#   ARG_DISTRIBUTION
-#   DISTRIBUTION
-# Returns:
-#   pyenv-version 
-function form_pyenv_version()
+#   VERSION_MAX
+#   VERSION_MIN
+function where_version()
 {
-    $ARG_DISTRIBUTION && \
-        echo "${DISTRIBUTION}-${1}" || \
-        echo "$1"
+    local version
+
+    while read -r version; do
+        case "$1" in
+            "lt") ver_lt "$version" "$VERSION_MAX" && echo "$version" ;;
+            "lte") ver_lte "$version" "$VERSION_MAX" && echo "$version" ;;
+            "gt") ver_lt "$VERSION_MIN" "$version" && echo "$version" ;;
+            "gte") ver_lte "$VERSION_MIN" "$version" && echo "$version" ;;
+            *) false; return ;;
+        esac
+    done < /dev/stdin
 }
 
 # Lists all Python versions available, defaulting to CPython
@@ -164,13 +224,18 @@ function form_pyenv_version()
 #   1: no versions available
 function CMD_versions()
 {
-    echo "Listing $TXT_LATEST of $TXT_DIST distribution $TXT_FROM" \
-        "`$ARG_VERSION && echo "matching version specification $TXT_VERSION"`" \
+    printf "%s%s%s%s\n" \
+        "`echo "Listing $TXT_LATEST of $TXT_DIST distribution $TXT_FROM"`" \
+        "`[ -n "$ARG_MIN" ] && echo " $TXT_MIN"`" \
+        "`[ -n "$ARG_MAX" ] && echo " ${ARG_MIN+and }$TXT_MAX"`" \
+        "`$ARG_VERSION && echo " matching version specification $TXT_VERSION"`" \
         >&2
 
     ( $ARG_ALL && pyenv install --list || pyenv versions ) \
         | filter_by_distribution \
         | ( $ARG_VERSION && filter_by_version || identity ) \
+        | ( [ -n "$ARG_MAX" ] && where_version "$ARG_MAX" || identity ) \
+        | ( [ -n "$ARG_MIN" ] && where_version "$ARG_MIN" || identity ) \
         | ( $ARG_LATEST && tail -n 1 || identity ) \
         | error_if_empty
 
@@ -222,8 +287,8 @@ function CMD_install()
     fi
 
     echo "Installing ${BOLD}${version}${_BOLD} of $TXT_DIST" >&2
-        
-    pyenv_version="$(form_pyenv_version "$version")"    
+
+    pyenv_version="$(form_pyenv_version "$version")"
     if ! pyenv install "$pyenv_version" >&2; then
         echo "ERROR: Installation of $version of $TXT_DIST failed" >&2
         false; return
@@ -233,7 +298,7 @@ function CMD_install()
 # -o short options, --long long options
 # -q manual error handling
 # opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
-if ! OPTS=`getopt -q -o ad:lv:h --long all,distribution:,latest,version:,help -- "$@"`; then
+if ! OPTS=`getopt -q -o ad:lv:h --long all,distribution:,latest,version:,lt:,lte:,gt:,gte:,help -- "$@"`; then
     usage ; exit
 fi
 
@@ -243,17 +308,31 @@ while true ; do
     case "$1" in
         -a|--all) ARG_ALL=true ; shift ;;
         -d|--distribution)
-            case "$2" in                
+            case "$2" in
                 *) ARG_DISTRIBUTION=true ; DISTRIBUTION="$2" ; shift 2 ;;
             esac ;;
         -h|--help) usage ; exit ;;
         -l|--latest) ARG_LATEST=true; shift ;;
         -v|--version)
-            case "$2" in
-                [0-9\*].[0-9\*].[0-9\*])
-                    ARG_VERSION=true ; VERSION="$2" ; shift 2 ;;
-                *) usage ; exit 1 ;;
-            esac ;;
+            if [[ "$2" =~ ^[0-9\*]+\.[0-9\*]+\.[0-9\*]+$ ]] ; then
+                ARG_VERSION=true ; VERSION_TMPL="$2" ; shift 2
+            else
+                usage ; exit 1
+            fi ;;
+        --lt|--lte)
+            [ -z "$ARG_MAX" ] || { usage ; exit 1 ; }
+            if [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+                ARG_MAX="${1//-/}" ; VERSION_MAX="$2" ; shift 2
+            else
+                usage ; exit 1
+            fi ;;
+        --gt|--gte)
+            [ -z "$ARG_MIN" ] || { usage ; exit 1 ; }
+            if [[ "$2" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ; then
+                ARG_MIN="${1//-/}" ; VERSION_MIN="$2" ; shift 2
+            else
+                usage ; exit 1
+            fi ;;
         --) shift ; break ;;
         *) usage ; exit 1 ;;
     esac
@@ -272,8 +351,16 @@ $ARG_DISTRIBUTION && TXT_DIST="${BOLD}${DISTRIBUTION}${_BOLD}" \
     || TXT_DIST="${BOLD}CPython${_BOLD}"
 $ARG_ALL && TXT_FROM="${BOLD}available remotely${_BOLD}" \
     || TXT_FROM="${BOLD}installed locally${_BOLD}"
-$ARG_VERSION && TXT_VERSION="${BOLD}${VERSION}${_BOLD}" \
+$ARG_VERSION && TXT_VERSION="${BOLD}${VERSION_TMPL}${_BOLD}" \
     || TXT_VERSION="${BOLD}*.*.*${_BOLD}"
+case "$ARG_MAX" in
+    lt) TXT_MAX="less than $VERSION_MAX" ;;
+    lte) TXT_MAX="less than or equal to $VERSION_MAX" ;;
+esac
+case "$ARG_MIN" in
+    gt) TXT_MIN="greater than $VERSION_MIN" ;;
+    gte) TXT_MIN="greater than or equal to $VERSION_MIN" ;;
+esac
 
 case "$COMMAND" in
     ver|versions) CMD_versions ;;

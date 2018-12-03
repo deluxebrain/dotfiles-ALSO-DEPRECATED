@@ -191,14 +191,9 @@ function main()
     -o "$ARG_OPTION" \
     -g "$DOTFILES_GROUP" || return
 
-  # Install packages
+  # Run package installers
   echo "Running package installers" >&2
-  find ./packages -type f -printf "%f\n" \
-    | sort \
-    | while read file; do
-      echo "... Running package installer $file" >&2
-      ./packages/"${file}" || return
-      done
+  ./scripts/setup-installers "pre-install" || return
 
   # Run installers
   # -u: Run as user so as to pull in new environment
@@ -209,7 +204,7 @@ function main()
   # -u: Run as user so as to pull in new environment
   if $ARG_PROVISION; then
     echo "Running provisioners" >&2
-    ./scripts/setup-installers -u "provision" || return
+    ./scripts/setup-installers -u "post-install" || return
   fi
 }
 
