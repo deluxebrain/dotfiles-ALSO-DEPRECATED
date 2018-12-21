@@ -5,7 +5,6 @@
 boxes/*
 .vagrant/*
 *.log
-.vagrantuser
 
 # Jupyter
 jupyter.dotfile/migrated
