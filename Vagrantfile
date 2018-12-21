@@ -29,7 +29,7 @@ Vagrant.configure("2") do |config|
 
     # Guest settings
     config.vm.box = "ubuntu/bionic64"
-    config.vm.hostname = "flask-restplus-demo"
+    config.vm.hostname = "dotfiles"
 
     # SSH configuration
     config.ssh.forward_agent = true

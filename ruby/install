@@ -9,12 +9,16 @@ echo "Installing Ruby" >&2
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Import rvm public key to enable package verification
+# Import rvm public keys to enable package verification
 gpg2 --keyserver hkp://keys.gnupg.net \
-    --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+    --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 \
+                7D2BAF1CF37B13E2069D6956105BD0E739499BDB
 gpg2 --refresh-keys
-# Trust the key
+
+# Trust the keys
 echo 409B6B1796C275462A1703113804BB82D39DC0E3:6: \
+    | gpg2 --import-ownertrust
+echo 7D2BAF1CF37B13E2069D6956105BD0E739499BDB:6: \
     | gpg2 --import-ownertrust
 
 # Download the installer
