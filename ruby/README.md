@@ -36,9 +36,8 @@ RVM supports automatic project-level ruby configuration using a few different te
 
 ### .rvmrc file
 
-The richest approach is via a project-level `.rvmrc`
-
-file. This allows for full scripting, however it requires explicit rvm trust.
+The richest approach is via a project-level `.rvmrc` file.
+This allows for full scripting, however it requires explicit rvm trust.
 
 ```sh
 # Create .rvmrc file with specified version

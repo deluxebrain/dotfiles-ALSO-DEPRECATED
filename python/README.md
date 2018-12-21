@@ -449,7 +449,7 @@ I.e. the installation of Pipenv appears to lead to an upgrade of Pip outside of 
 
 Note that the installation of Pipenv will therefore fail if the path is not set correctly to resolve `$HOME/.local/bin` ahead of `/usr/bin`.
 
-This leads to the following important caveat: Pipenv should not be installed until after the path os set to prepend the local path.
+This leads to the following important caveat: Pipenv should not be installed until after the path is set to prepend the local path.
 
 ### Use of pyenv-virtualenv
 
