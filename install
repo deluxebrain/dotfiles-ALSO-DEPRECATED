@@ -58,7 +58,7 @@ function usage()
             Comma separated list of variables expressed as name/value pairs.
             Valid variables are:
               ${BOLD}email.address${_BOLD}
-              ${BOLD}user.name{_BOLD}
+              ${BOLD}user.name${_BOLD}
         -h|--help
             Display this help information
 
