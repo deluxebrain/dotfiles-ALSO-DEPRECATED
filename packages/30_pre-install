@@ -2,9 +2,6 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-# /usr/local/bin
-# ~/.local/bin/pip
-
 # DO NOT INSTALL PIP PACKAGES UNTIL PATH HAS BEEN SET
 
 # Install Python for use as pyenv system version
