@@ -344,7 +344,7 @@ mkdir foo && cd $_
 pyenv virtualenv <version> <name>
 
 # Use conda environment locally
-pyenv local <version>
+pyenv local <name>
 
 # Install dependencies
 conda install -y <package>

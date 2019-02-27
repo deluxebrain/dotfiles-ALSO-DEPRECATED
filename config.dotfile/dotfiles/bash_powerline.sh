@@ -8,10 +8,12 @@ export POWERLINE_BASH_SELECT=1
 # Ensure the powerline-daemon is started before starting powerline
 powerline-daemon -q
 
-# If installed through apt
-#source "/usr/share/powerline/bindings/bash/powerline.sh"
+# Start powerline
 
-# If installed through pip into the active python
+# Option 1) If installed through apt
+# source "/usr/share/powerline/bindings/bash/powerline.sh"
+
+# Option 2) If installed through pip into the active python
 source "$(pip show powerline-status 2>/dev/null \
     | grep Location \
     | awk '{print $2}' \

@@ -37,3 +37,7 @@ rvm install --latest --verify-downloads 1 ruby
 # Switch back using:
 # rvm use system
 rvm use --default ruby
+
+# Generate ri docs
+echo "Generating ri docs" >&2
+gem rdoc --all --ri --no-rdoc

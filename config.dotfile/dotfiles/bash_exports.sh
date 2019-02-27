@@ -17,28 +17,34 @@ export NVM_DIR="$HOME/.nvm"
 export NODE_REPL_HISTORY_SIZE=10000
 
 # Python
-# PyEnv
+# Set Python to use UTF-8 encoding for stdout/stdin/stderr
+export PYTHONIOENCODING="UTF-8"
+# pyenv
 export PYENV_ROOT="$HOME/.pyenv"
+# pyenv-virtualenv
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 # Configure Pipenv to integrate with PyEnv to determine Python version
 export PIPENV_PYTHON="$PYENV_ROOT/shims/python"
-# Set Python to use UTF-8 encoding for stdout/stdin/stderr
-export PYTHONIOENCODING="UTF-8"
 
 # History
-# don't put duplicate lines or lines starting with space in the history.
-export HISTCONTROL=ignoreboth
 export HISTSIZE=10000
 export HISTFILESIZE=10000
+# don't put duplicate lines or lines starting with space in the history.
+export HISTCONTROL='ignoreboth'
+# set list of commands to ignore in history
+export HISTIGNORE='ls:bg:fg:history'
+# timestamp all history entries
+export HISTTIMEFORMAT='%F %T '
 
 # Path
 # User level scripts
 export PATH="$HOME/bin:$HOME/lib:$PATH"
 # Python
-# Pyenv
+# pyenv
 export PATH="$PYENV_ROOT/bin:$PATH"
+# pip
 # Resolve $HOME/.local/bin/pip ahead of /usr/bin/pip
 # Resolve packages installed using pip --user
 export PATH="$HOME/.local/bin:$PATH"
-# RVM - must be last PATH change
+# rvm - must be last PATH change
 export PATH="$PATH:$HOME/.rvm/bin"

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# NO LONGER USED
+exit
+
 # HACK until pyenv / pyenv-virtualenv integration with conda is fixed
 # See: https://github.com/pyenv/pyenv-virtualenv/issues/178
 

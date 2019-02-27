@@ -1,3 +1,11 @@
+[ -d "$NVM_DIR" ] || return
+[ -f "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -f "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+
+# NO LONGER USED
+# ( direnv used in preference to hacking the PROMPT_COMMAND )
+true ; return
+
 # Globals
 __NVM_DIRTY=false
 
@@ -35,10 +43,6 @@ function __PROMPT_COMMAND_NVM()
         fi
     fi
 }
-
-[ -d "$NVM_DIR" ] || return
-[ -f "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-[ -f "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
 
 # PROMPT_COMMAND must be set before configuring Powerline
 command -v nvm >/dev/null && \

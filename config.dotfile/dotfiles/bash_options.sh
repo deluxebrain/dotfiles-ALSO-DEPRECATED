@@ -19,8 +19,11 @@ shopt -s nocaseglob
 # wc **/*.py -l
 shopt -s globstar
 
-# append to history file ( instead of overwriting )
-shopt -s histappend 
+# append to history file ( ~/.bash_history )
+# ( default is to overrwrite previous history )
+shopt -s histappend
+# reformat multiline commands to single line in history
+shopt -s cmdhist
 
 # save all lines of a multiline command to same history entry
 shopt -s cmdhist
