@@ -18,20 +18,20 @@ function usage()
   SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
   cat <<EOF
     usage: $SCRIPT_NAME [-g|--group <${UNDERLINE}group${_UNDERLINE}>]
-                        [-o|--option <${UNDERLINE}option${_UNDERLINE}>]                       
+                        [-o|--option <${UNDERLINE}option${_UNDERLINE}>]
                         [-h|--help]
                         <command> [<args>]
 
     ${BOLD}OPTIONS${_BOLD}
         -g|--group
-            Group to set as owner of dotfile files            
+            Group to set as owner of dotfile files
         -o|--option
             File handling option for existing files.
             Defaults to ${BOLD}backup${_BOLD}
             Valid options are:
               ${BOLD}overwrite${_BOLD} existing
               ${BOLD}backup${_BOLD} existing
-              ${BOLD}skip${_BOLD} existing       
+              ${BOLD}skip${_BOLD} existing
         -h|--help
             Display this help information
 
@@ -221,6 +221,7 @@ function link_files()
   for src in $(find -H "$(pwd)" \
     -maxdepth 3 \
     \( -name '*.symlink' -o -name '*.dotfile' -o -name '*.merge' -o -name '*.template' \) \
+    -not -name '#*' \
     -not -path '*.git*')
   do
     dst="$(form_link_path "$src")"
@@ -319,7 +320,7 @@ function link_file()
 # Entry point
 
 function main()
-{   
+{
   # Change into the root git directory for the current script
   cd "$(get_git_root_dir)" || return
 
@@ -337,7 +338,7 @@ fi
 eval set -- "$OPTS"
 
 while true; do
-  case "$1" in    
+  case "$1" in
     -g|--group) ARG_GROUP="$2" ; shift 2 ;;
     -o|--option)
       case "$2" in
@@ -345,7 +346,7 @@ while true; do
         "backup") ARG_BACKUP_ALL=true ; shift 2 ;;
         "skip") ARG_SKIP_ALL_false ; shift 2 ;;
         *) usage ; exit 1 ;;
-      esac ;;   
+      esac ;;
     -h|help) usage ; exit ;;
     --) shift ; break ;;
     *) usage ; exit 1 ;;

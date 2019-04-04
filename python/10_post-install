@@ -7,8 +7,8 @@ source "$DOTFILES_CONFIG_HOME/bash_pyenv.sh"
 echo "Provisioning Python environment" >&2
 
 # Install latest Python3 and miniconda3 distributions
-pyenv-wrapper -v 3.*.* install
-pyenv-wrapper -d miniconda3 install
+xenv -v 3.*.* install
+xenv -d miniconda3 install
 
 # Set pyenv to use the system Python by default
 # This gives us access to the global python environment

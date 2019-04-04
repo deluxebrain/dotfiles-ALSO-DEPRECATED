@@ -1,0 +1,3 @@
+# GOPATH
+# MODULES
+# Go versions

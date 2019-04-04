@@ -1,6 +1,61 @@
-README
-  - cf toolbox
+# TODO
+
+- [ ] README
+  - c.f. toolbox
     - evolutionary
     - never completed ( add what you need at the time )
     - requires documenting
+- github-installer
+  - [Y] Manual installs ( e.g. docker-machine ) should install into a versioned location and be symlinked
+  - [Y] Factor out common code from docker-machine/compose installation
+  - [X] Github api throttling consideration
+  - [X] Support for version template
+  - [X] echo text
+  - [X] option handling inc. help
+  - [X] Function headers
+  - [X] option handling ( inc. help )
+  - [X] test with docker-machine/compose
+  - [X] install completions
+  - [X] ONLY install completions
+  - [ ] update docker installs to use script
+- [ ] Get xenv under test ( mocking of e.g. pyenv )
+- [ ] Blogs
+  - xenv
+  - installation from github
+    - extend script to allow version to be specified
+    - extend script to support repos that dont use releases
+    - extend script to get all versions and allow templated versions
+      - at this point the curl will need mocking
+    - extend script to support caching
+  - options for running container workloads on AWS
+    - AWS Fargate
+    - Amazon ECS
+    - Amazon EKS
+    - AWS Batch
+    - AWS Elastic Beanstalk
+    - EC2 instances
+- [Y] Golang installer
+- [ ] .editorrc ( tabs / spaces )
+- [ ] GO README
+- [ ] Reduce log verbosity and make errors more obvious
+- [ ] Move to Ansible and make individual installs more atomic to allow reuse elsewhere
+- [ ] Anki
+  - [ ] arrays, indexed, associative, returning, getting keys
+  - [ ] jq
+  - [ ] grep fif
+  - [ ] pyenv
+  - [ ] rbenv
+  - [ ] xenv
+  - [ ] bash regex / match
+  - [ ] awk
+  - [ ] sed
+    - https://stackoverflow.com/questions/2973436/regex-lookahead-lookbehind-and-atomic-groups
+    - grep -oP '(?<=^Link: ).*'
+    - sed -n 's/Link: //p'
+  - [ ] split string on character and iterative over parts
+  - [ ] wget check for file (  wget -S --spider --quiet  www.google.com 2>&1 | grep --quiet '200 OK' && echo here )
 
+TODAY
+- [ ] Update all README's
+- [ ] Review all commits
+- [ ] Code review

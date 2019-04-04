@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
 # Globals
+XENV="pyenv"                # Command to invoke, defaults to pyenv
+# Supported languages and their default distributions
+declare -A XENVS
+XENVS=(
+    ["pyenv"]="CPython"
+    ["rbenv"]="CRuby"
+    ["nodenv"]="NodeJS"
+)
 ARG_ALL=false               # ARG_ALL ? remote : local
 ARG_DISTRIBUTION=false      # distribution filter specified ?
 # DISTRIBUTION=             distribution filter
@@ -12,16 +20,16 @@ VERSION_TMPL=               # version filter template
 # VERSION_MIN=              version used by gt/gte
 # VERSION_MAX=              version used by lt/lte
 
-# Regexs used to parse PyEnv responses. E.g,
+# Regexs used to parse xenv responses. E.g,
 # pyenv install --list
 # (stdout) \tDISTRIBUTION-VERSION
-# Note CPython is represented by a blank distribution name. E.g,
+# Note default distribution is represented by a blank distribution name. E.g,
 #   3.7.0
 #   miniconda3-4.3.30
 RE_DISTRIBUTION="((.*)-)?"
 RE_VERSION="([0-9]+\.[0-9]+\.[0-9]+)"
 # groups: raw, _, distribution, version
-RE_PYENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
+RE_XENV="s/^[ \t]*(${RE_DISTRIBUTION}${RE_VERSION})$"
 
 # Console formatting
 BOLD="$(tput bold)"; _BOLD="$(tput sgr0)"
@@ -31,19 +39,28 @@ function usage()
 {
   SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
   cat <<EOF
-    usage: $SCRIPT_NAME [-a|--all] [-d|--distribution=<${UNDERLINE}distribution${_UNDERLINE}>]
-                        [-h|--help] [-l|--latest]
+    usage: $SCRIPT_NAME [-a|--all]
+                        [-d|--distribution=<${UNDERLINE}distribution${_UNDERLINE}>]
+                        [-h|--help]
+                        [-l|--latest]
                         [-v|--version=<${UNDERLINE}version${_UNDERLINE}>]
                         [--lt[e]=<${UNDERLINE}version${_UNDERLINE}>]
                         [--gt[e]=<${UNDERLINE}version${_UNDERLINE}>]
                         <command> [<args>]
 
     ${BOLD}OPTIONS${_BOLD}
+        -c|--command
+            Command to invoke.
+            The following command are supported:
+            ${BOLD}pyenv${_BOLD} (default)
+            ${BOLD}rbenv${_BOLD}
+            ${BOLD}nodenv${_BOLD}
         -a|--all
-            Include remote results. Defaults filtering by results installed locally.
+            Include remote results.
+            Default filters by results installed locally.
         -d|--distribution
             Filter results to specified ${UNDERLINE}distribution${_UNDERLINE}.
-            Defaults to CPython.
+            Defaults to default distribution for the language.
         -h|--help
             Display this help information
         -l|--lastest
@@ -61,17 +78,29 @@ function usage()
 
     ${BOLD}COMMANDS${_BOLD}
 
-    List information about available Python versions
+    List information about available language versions
         ver|versions                Available versions
         dist|distributions          Availble distributions
 
-    Python installation
-        install                     Install Python version
+    Management
+        install                     Install language version
 
     Meta
         help                        Display this help information
 
 EOF
+}
+
+# Dynamically invoke specified command using parameters as passed
+# Argyments:
+#   $1..n: Parameters to pass specified command
+# Globals:
+#   XENV: Command to invoke
+# Returns:
+#   stdout: Result to command
+function dispatch()
+{
+    eval "command $XENV $@"
 }
 
 # $1 <= $2 ? true : false
@@ -119,22 +148,22 @@ function identity()
     cat < /dev/stdin
 }
 
-# Forms pyenv-version string
+# Forms xenv-version string
 # Arguments:
 #   $1: Version number
 # Globals:
 #   ARG_DISTRIBUTION
 #   DISTRIBUTION
 # Returns:
-#   pyenv-version
-function form_pyenv_version()
+#   xenv-version
+function form_xenv_version()
 {
     $ARG_DISTRIBUTION && \
         echo "${DISTRIBUTION}-${1}" || \
         echo "$1"
 }
 
-# Filters PyEnv versions list by distribution
+# Filters xenv versions list by distribution
 # Arguments:
 #   stdin: \tDISTRIBUTION-VERSION
 # Globals:
@@ -144,13 +173,13 @@ function form_pyenv_version()
 function filter_by_distribution()
 {
     # groups: raw, distribution, version
-    sed -nr "${RE_PYENV}/\1,\3,\4/p" \
+    sed -nr "${RE_XENV}/\1,\3,\4/p" \
         | awk -F"," -v x="$DISTRIBUTION" '$2==x {print $3}' \
         | sort -V \
         < /dev/stdin
 }
 
-# Filters PyEnv versions list to get unique list of distributions
+# Filters xenv versions list to get unique list of distributions
 # Arguments:
 #   stdin: \tDISTRIBUTION-VERSION
 # Returns:
@@ -158,9 +187,9 @@ function filter_by_distribution()
 function extract_distributions()
 {
     # groups: distribution
-    # cpython defaults to blank distribution name so fix that up
-    sed -nr "${RE_PYENV}/\3/p" \
-        | sed 's/^$/cpython/' \
+    # default distribution defaults to blank so fix that up
+    sed -nr "${RE_XENV}/\3/p" \
+        | sed "s/^$/${XENVS["$XENV"]}/" \
         | sort \
         | uniq \
         < /dev/stdin
@@ -181,13 +210,14 @@ function filter_by_version()
     # replace * with [[:digit:]]*
     # search '*' needs escaping to prevent globbing
     # * in replace term allows to multiple matches
+    # version_pattern="${VERSION_TMPL//\*/[[:digit:]]*}"
     version_pattern="${VERSION_TMPL//\*/[[:digit:]]*}"
 
     # split version into parts array on IFS
     version_parts=( ${version_pattern//./ } )
 
     # -o: only display matched text (i.e. the version)
-    grep -o "${version_parts[0]}.${version_parts[1]}.${version_parts[2]}" \
+    grep -o "${version_parts[0]}\.${version_parts[1]}\.${version_parts[2]}" \
         | sort -V \
         < /dev/stdin
 }
@@ -214,7 +244,25 @@ function where_version()
     done < /dev/stdin
 }
 
-# Lists all Python versions available, defaulting to CPython
+# Checks passed array for the specified element
+# Arguments:
+#   $1: element
+#   $2: array ( passed as "${my_array[@]}" )
+# Returns:
+#   0: array contains element
+#   1: array does not contain element
+function contains_element()
+{
+    local element match="$1"
+    shift # shift the argument list to the array
+    # `for` without `in` implicitly iterates over the argument list
+    for element ; do
+        [[ "$element" == "$match" ]] && { true ; return ; }
+    done
+    false; return
+}
+
+# Lists all language versions available, defaulting to default distribution
 # Globals:
 #   ARG_ALL
 #   ARG_LATEST
@@ -231,7 +279,7 @@ function CMD_versions()
         "`$ARG_VERSION && echo " matching version specification $TXT_VERSION"`" \
         >&2
 
-    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
+    ( $ARG_ALL && dispatch install --list || dispatch versions ) \
         | filter_by_distribution \
         | ( $ARG_VERSION && filter_by_version || identity ) \
         | ( [ -n "$ARG_MAX" ] && where_version "$ARG_MAX" || identity ) \
@@ -244,7 +292,7 @@ function CMD_versions()
     fi
 }
 
-# Lists all Python distributions available
+# Lists all language distributions available
 # Globals:
 #   ARG_ALL
 # Returns:
@@ -254,7 +302,7 @@ function CMD_distributions()
 {
     echo "Listing distributions $TXT_FROM" >&2
 
-    ( $ARG_ALL && pyenv install --list || pyenv versions ) \
+    ( $ARG_ALL && dispatch install --list || dispatch versions ) \
         | extract_distributions \
         | error_if_empty
 
@@ -263,21 +311,21 @@ function CMD_distributions()
     fi
 }
 
-# Installs specified Python version
+# Installs specified language version
 # Globals:
 #   ARG_VERSION
 #   ARG_DISTRIBUTION
 #   DISTRIBUTION
 # Returns:
-#   1: no matching Python version available
+#   1: no matching language version available
 function CMD_install()
 {
-    local version pyenv_version
+    local version xenv_version
 
     echo "Determining latest version of $TXT_DIST" \
         "`$ARG_VERSION && echo "matching version spec $TXT_VERSION"`" >&2
 
-    if ! version="`pyenv install --list \
+    if ! version="`dispatch install --list \
         | filter_by_distribution \
         | ( $ARG_VERSION && filter_by_version || identity ) \
         | tail -n 1 \
@@ -288,8 +336,8 @@ function CMD_install()
 
     echo "Installing ${BOLD}${version}${_BOLD} of $TXT_DIST" >&2
 
-    pyenv_version="$(form_pyenv_version "$version")"
-    if ! pyenv install "$pyenv_version" >&2; then
+    xenv_version="$(form_xenv_version "$version")"
+    if ! dispatch install --skip-existing "$xenv_version" >&2; then
         echo "ERROR: Installation of $version of $TXT_DIST failed" >&2
         false; return
     fi
@@ -298,7 +346,7 @@ function CMD_install()
 # -o short options, --long long options
 # -q manual error handling
 # opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
-if ! OPTS=`getopt -q -o ad:lv:h --long all,distribution:,latest,version:,lt:,lte:,gt:,gte:,help -- "$@"`; then
+if ! OPTS=`getopt -q -o ac:d:lv:h --long all,command:,distribution:,latest,version:,lt:,lte:,gt:,gte:,help -- "$@"`; then
     usage ; exit
 fi
 
@@ -307,10 +355,12 @@ eval set -- "$OPTS"
 while true ; do
     case "$1" in
         -a|--all) ARG_ALL=true ; shift ;;
+        -c|--command)
+            contains_element "$2" "${!XENVS[@]}" || { usage ; exit 1 ; }
+            XENV="$2" ; shift 2 ;;
         -d|--distribution)
-            case "$2" in
-                *) ARG_DISTRIBUTION=true ; DISTRIBUTION="$2" ; shift 2 ;;
-            esac ;;
+            [ -n "$2" ] || { usage ; exit 1 ; }
+            ARG_DISTRIBUTION=true ; DISTRIBUTION="$2" ; shift 2 ;;
         -h|--help) usage ; exit ;;
         -l|--latest) ARG_LATEST=true; shift ;;
         -v|--version)
@@ -348,7 +398,7 @@ COMMAND="$1" ; shift
 $ARG_LATEST && TXT_LATEST="${BOLD}latest version${_BOLD}" \
     || TXT_LATEST="${BOLD}all versions${_BOLD}"
 $ARG_DISTRIBUTION && TXT_DIST="${BOLD}${DISTRIBUTION}${_BOLD}" \
-    || TXT_DIST="${BOLD}CPython${_BOLD}"
+    || TXT_DIST="${BOLD}${XENVS[$XENV]}${_BOLD}"
 $ARG_ALL && TXT_FROM="${BOLD}available remotely${_BOLD}" \
     || TXT_FROM="${BOLD}installed locally${_BOLD}"
 $ARG_VERSION && TXT_VERSION="${BOLD}${VERSION_TMPL}${_BOLD}" \

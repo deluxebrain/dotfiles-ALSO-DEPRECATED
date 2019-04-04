@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+export DEBIAN_FRONTEND=noninteractive
+
+# DO NOT INSTALL GEM PACKAGES UNTIL PATH HAS BEEN SET
+
+# Install Ruby for use as rbenv system version
+echo "Installing system ruby" >&2
+sudo apt-get install -y \
+    ruby

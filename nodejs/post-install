@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-# Not in interactive shell so need to boostrap NVM
+# NODENV NodeJS provisioner
+
+# Not in interactive shell so need to boostrap nodenv
 # ( see shell dotfiles )
-source "$DOTFILES_CONFIG_HOME/bash_nvm.sh"
+source "$DOTFILES_CONFIG_HOME/bash_nodenv.sh"
 
 echo "Provisioning NodeJS environment" >&2
 
-# Install latest version of node
-nvm install node
+# Verify rbenv installation using rbenv-doctor
+curl -fsSL https://github.com/nodenv/nodenv-installer/raw/master/bin/nodenv-doctor \
+    | bash
 
-# Install specific named versions of node
-nvm install 8
-nvm install 10
-
-# Set the default version to the lastest installed NodeJS version
-nvm alias default node
+# Install latest NodeJS distributions
+xenv -c nodenv -v 10.*.* install
+xenv -c nodenv install

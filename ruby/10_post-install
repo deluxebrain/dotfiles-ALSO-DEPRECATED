@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# RBENV Ruby provisioner
+
+# Not in interactive shell so need to boostrap rbenv
+# ( see shell dotfiles )
+source "$DOTFILES_CONFIG_HOME/bash_rbenv.sh"
+
+echo "Provisioning Ruby environment" >&2
+
+# Verify rbenv installation using rbenv-doctor
+curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor \
+    | bash
+
+# Install latest Ruby distribution
+xenv -c rbenv -v 2.*.* install
+
+# Set rbenv to use the system Ruby by default
+# This gives us access to the global ruby environment
+rbenv global system

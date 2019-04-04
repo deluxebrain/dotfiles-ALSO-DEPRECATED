@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 
+# NODENV installer
+
 set -eou pipefail
 
-echo "Installing nvm" >&2
+echo "Installing nodenv" >&2
 
-# Create temporary working directory
-# Delete it on exit
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
+[ ! -d "$NODENV_ROOT" ] && mkdir -p "$NODENV_ROOT" >/dev/null
 
-# Download latest nvm release
-curl -s "https://api.github.com/repos/creationix/nvm/releases/latest" \
-    | grep "tarball_url" \
-    | cut -d '"' -f 4 \
-    | xargs -n1 wget -O "$TMPDIR/nvm.tar.gz"
+# Install nodenv
+git clone https://github.com/nodenv/nodenv.git "$NODENV_ROOT"
 
-# Unzip the latest release
-mkdir "$TMPDIR/nvm"
-tar -xzf "$TMPDIR/nvm.tar.gz" --directory "$TMPDIR/nvm"
+# Compile dynamic bash nodenv extension
+cd "$NODENV_ROOT" && src/configure && make -C src
 
-# Find and run the installer
-# Create a tmp shell dotfile and point the install script PROFILE
-# variable at it to prevent the installer writing into the users shell dotfiles
-touch "$TMPDIR/.profile"
-[ ! -d "$NVM_DIR" ] && mkdir -p "$NVM_DIR" >/dev/null
-find "$TMPDIR/nvm" -name "install.sh" | PROFILE="$TMPDIR/.profile" bash >/dev/null
+# Install node-build to get the `nodenv install` command
+[ ! -d "$NODENV_ROOT/plugins" ] && mkdir -p "$NODENV_ROOT/plugins" >/dev/null
+git clone https://github.com/nodenv/node-build.git \
+    "$NODENV_ROOT/plugins/node-build"

@@ -11,16 +11,15 @@ function source_bash_files()
 
     # Notes:
     # nvm sets PROMPT_COMMAND which must be set before configuring Powerline
-    # rvm requires PATH to be frozen before initialization
     # Powerline must be started before pyenv
     local -r -a files=(
         "bash_options.sh"
         "bash_aliases.sh"
         "bash_ssh-agent.sh"
-        "bash_nvm.sh"
         "bash_powerline.sh"
         "bash_pyenv.sh"
-        "bash_rvm.sh"
+        "bash_rbenv.sh"
+        "bash_nodenv.sh"
         "bash_direnv.sh"
         "bash_autocomplete.sh"
     )

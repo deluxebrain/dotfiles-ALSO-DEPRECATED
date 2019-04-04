@@ -77,7 +77,7 @@ function find_and_run_installers()
   # use absolute path with find as we need file references to be absolute
   # mindepth: only search subdirectories
   # maxdepth: we know installers are in shallow directories
-  # exclude subdirectories ending with #
+  # exclude subdirectories starting with #
   # sed
   # we are looking for files such as:
   # /foo/bar/install
@@ -86,7 +86,7 @@ function find_and_run_installers()
     -mindepth 2 \
     -maxdepth 3 \
     -type f \
-    -not -path '*#/*' \
+    -not -path '*/#*' \
   | sed -nr "s|.*/([0-9]+_)?${ARG_ACTION}|\0|p" \
   | sort \
   | while read -r installer; do

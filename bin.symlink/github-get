@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Options / arguments
+OPT_USER=           # github user
+OPT_REPOS=          # github repos
+OPT_PACKAGE=        # github project
+OPT_INSTALL_PACKAGE=true
+# path to package bash completions
+OPT_COMPLETIONS_PATH="contrib/completion/bash"
+OPT_INSTALL_COMPLETIONS=false
+
+PLATFORM="`uname -s`-`uname -m`"    # e.g. Linux-x86_64
+GITHUB_META_URL_TMPL='https://api.github.com/repos/${user}/${repos}/releases/latest'
+REPOS_URL_TMPL='https://raw.githubusercontent.com/${user}/${repos}/${tag}'
+TMPDIR="$(mktemp -d)"
+
+trap 'rm -rf "$TMPDIR"' EXIT
+
+function usage()
+{
+  SCRIPT_NAME="`basename ${BASH_SOURCE[0]}`"
+  cat <<EOF
+    usage: $SCRIPT_NAME [-u|--user=<user>]
+                        [-r|--repos=<repos>]
+                        [-p|--package=<package>]
+                        [--no-package]
+                        [-c|--completions]
+                        [--completions-path=<path>]
+                        [-h|--help]
+                        <command> [<args>]
+
+    OPTIONS
+        -u|--user
+            Github user corresponding to the owner of the package
+        -r|--repos
+            Github repos name for the package
+        -p|--package
+            Github project name for the package
+        --no-package
+            Do not install package
+        -c|--completions
+            Install bash completions if available
+        --completions-path
+            Path to bash completions
+            Defaults to contrib/completion/bash
+
+    COMMANDS
+
+        help        Display this help information
+
+EOF
+}
+
+# Get meta for latest version of specified package
+# Arguments:
+#   $1: Github user
+#   $2: Github repos
+# Returns:
+#   - latest package version
+#   - tag name for latest version
+#   - package download url for latest version
+function get_latest_release_meta()
+{
+    local user="$1" repos="$2"
+    local github_meta_url="$(eval echo $GITHUB_META_URL_TMPL)"
+
+    # curl returns:
+    # {
+    #   name: <version>,
+    #   tag_name: <tag_name>,
+    #   assets: [
+    #       {
+    #           name: docker-machine-<platform>,
+    #           browser_download_url: <url>
+    #       }]
+    # }
+    curl -s "$github_meta_url" \
+        | jq -r --arg platform "$PLATFORM" '
+        .name,
+        .tag_name,
+        (
+            .assets[]
+            | select ( .name | contains($platform) )
+            | .browser_download_url
+        )'
+}
+
+# Download specified package to tmp directory
+# Arguments:
+#   $1: package name
+#   $2: download url
+# Returns:
+#   stdout: download path
+function download_package()
+{
+    local package="$1" download_url="$2"
+    local download_path="$TMPDIR/package/$package"
+
+    mkdir -p "$(dirname "$download_path")" >/dev/null
+    # -O: Output file
+    wget --quiet --show-progress -O "$download_path" "$download_url"
+
+    echo "$download_path"
+}
+
+# Locate and download bash completions if available
+# Arguments:
+#   $1: github user
+#   $2: github repos
+#   $3: package name
+#   $4: version tag
+# Returns:
+#   0/1: completions available / not available
+#   stdout: download path
+function download_completions()
+{
+    local user="$1" repos="$2" package="$3" tag="$4"
+    local download_path="$TMPDIR/completions/$package"
+    local file download_url
+
+    for file in $package $package.bash ; do
+        download_url="$(eval echo $REPOS_URL_TMPL/$OPT_COMPLETIONS_PATH/$file)"
+        if wget -S --spider --quiet "$download_url" 2>&1 \
+            | grep --quiet '200 OK' ; then
+            mkdir -p "$(dirname "$download_path")" >/dev/null
+            # -O: Output file
+            wget --quiet --show-progress -O "$download_path" "$download_url"
+            echo "$download_path"
+            return
+        fi
+    done
+    false ; return
+}
+
+# Installs specified package to versioned install path
+# Forms symlink to allow canonical use of package
+# Arguments:
+#   $1: package name
+#   $2: package version
+#   $3: download path
+# Returns:
+function install_package()
+{
+    local package="$1" version="$2" download_path="$3"
+    local install_path="/usr/local/bin/$package-$version"
+
+    [ -d "$install_path" ] && sudo rm -rf "$install_path"
+    sudo mkdir -p "$install_path"
+
+    # install the package archive into the install path
+    echo "Installing $package version $version" >&2
+    sudo install "$download_path" "$install_path/$package"
+
+    # link the versioned package install to a canonical package
+    [ -L "/usr/local/bin/$package" ] && sudo rm -f "/usr/local/bin/$package"
+    sudo ln -s "$install_path/$package" "/usr/local/bin/$package"
+}
+
+# Installs specified package bash completions
+# Overwrites any existing file
+# Arguments:
+#   $1: download path
+# Returns:
+function install_completions()
+{
+    local download_path="$1"
+    local filename
+
+    filename="$(basename "$download_path")"
+    sudo cp -f "$download_path" "/etc/bash_completion.d/$filename"
+}
+
+function main()
+{
+    local -a package_meta
+    local version tag download_url download_path
+
+    # get the meta for the latest release of the specified package
+    package_meta=($(get_latest_release_meta "$OPT_USER" "$OPT_REPOS"))
+    version="${package_meta[0]}"
+    tag="${package_meta[1]}"
+    download_url="${package_meta[2]}"
+
+    # download and install the package
+    if $OPT_INSTALL_PACKAGE ; then
+        download_path="$(download_package "$OPT_PACKAGE" "$download_url")"
+        install_package "$OPT_PACKAGE" "$version" "$download_path"
+    fi
+
+    # download any associated completion
+    if $OPT_INSTALL_COMPLETIONS ; then
+        echo "Installing completions for $OPT_PACKAGE if available" >&2
+        if download_path="$(download_completions "$OPT_USER" \
+            "$OPT_REPOS" \
+            "$OPT_PACKAGE" \
+            "$tag")" ; then
+            install_completions "$download_path"
+        fi
+    fi
+}
+
+# -o short options, --long long options
+# -q manual error handling
+# opt --> flag, opt: --> option with mandatory arg, opt:: --> option with optional arg
+if ! OPTS=`getopt -q -o u:r:p:ch --long user:,repos:,package:,no-package,completions:,completions-path:,help -- "$@"`; then
+    usage ; exit
+fi
+
+eval set -- "$OPTS"
+
+while true ; do
+    case "$1" in
+        -u|--user)
+            [ -n "$2" ] || { usage ; exit 1 ; }
+            OPT_USER="$2"
+            shift 2
+            ;;
+        -r|--repos)
+            [ -n "$2" ] || { usage ; exit 1 ; }
+            OPT_REPOS="$2"
+            shift 2
+            ;;
+        -p|--package)
+            [ -n "$2" ] || { usage ; exit 1 ; }
+            OPT_PACKAGE="$2"
+            shift 2
+            ;;
+        --no-package)
+            OPT_INSTALL_PACKAGE=false
+            shift
+            ;;
+        -c|--completions)
+            OPT_INSTALL_COMPLETIONS=true
+            shift
+            ;;
+        --completions-path)
+            [ -n "$2" ] || { usage ; exit 1 ; }
+            OPT_COMPLETIONS_PATH="$2"
+            shift 2
+            ;;
+        -h|--help) usage ; exit ;;
+        --) shift ; break ;;
+        *) usage ; exit 1 ;;
+    esac
+done
+
+if [[ -z "$OPT_USER" || -z "$OPT_REPOS" || -z "$OPT_PACKAGE" ]] ; then
+    usage
+    exit 1
+fi
+
+main

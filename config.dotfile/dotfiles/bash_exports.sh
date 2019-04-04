@@ -26,6 +26,17 @@ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 # Configure Pipenv to integrate with PyEnv to determine Python version
 export PIPENV_PYTHON="$PYENV_ROOT/shims/python"
 
+# Ruby
+# rbenv
+export RBENV_ROOT="$HOME/.rbenv"
+
+# NodeJS
+# nodenv
+export NODENV_ROOT="$HOME/.nodenv"
+
+# Go
+export GOPATH="$HOME/go"
+
 # History
 export HISTSIZE=10000
 export HISTFILESIZE=10000
@@ -39,12 +50,24 @@ export HISTTIMEFORMAT='%F %T '
 # Path
 # User level scripts
 export PATH="$HOME/bin:$HOME/lib:$PATH"
-# Python
+
+# Path::Python
 # pyenv
 export PATH="$PYENV_ROOT/bin:$PATH"
 # pip
 # Resolve $HOME/.local/bin/pip ahead of /usr/bin/pip
 # Resolve packages installed using pip --user
 export PATH="$HOME/.local/bin:$PATH"
-# rvm - must be last PATH change
-export PATH="$PATH:$HOME/.rvm/bin"
+
+# Path::Ruby
+# rbenv
+export PATH="$RBENV_ROOT/bin:$PATH"
+# Enable use of Gem from system Ruby
+export PATH="`ruby -e 'puts Gem.user_dir'`/bin:$PATH"
+
+# Path::NodeJS
+# nodenv
+export PATH="$NODENV_ROOT/bin:$PATH"
+
+# Path::Go
+export PATH="$PATH:/usr/local/go/bin"

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+echo "Verifying go installation" >&2
+
+# Create temporary working directory
+# Delete it on exit
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+cat << EOF > $TMPDIR/test.go
+package main
+import "fmt"
+func main() {
+	fmt.Printf("hello, world\n")
+}
+EOF
+
+cd $TMPDIR
+go build -o test
+if ! ./test | grep -q "hello, world" ; then
+    echo "Verification of go installation failed" >&2
+    false; exit
+fi

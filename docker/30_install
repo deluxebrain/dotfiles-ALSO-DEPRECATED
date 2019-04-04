@@ -8,7 +8,6 @@ set -eou pipefail
 echo "Installing Docker Compose" >&2
 
 PLATFORM="`uname -s`-`uname -m`"    # e.g. Linux-x86_64
-
 VERSION=
 TAG=
 GITHUB_META_URL="https://api.github.com/repos/docker/compose/releases/latest"

@@ -1,42 +1,20 @@
 #!/usr/bin/env bash
 
+# RBENV installer
+
 set -eou pipefail
 
-echo "Installing Ruby" >&2
+echo "Installing rbenv" >&2
 
-# Create temporary working directory
-# Delete it on exit
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
+[ ! -d "$RBENV_ROOT" ] && mkdir -p "$RBENV_ROOT" >/dev/null
 
-# Import rvm public keys to enable package verification
-gpg2 --keyserver hkp://keys.gnupg.net \
-    --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 \
-                7D2BAF1CF37B13E2069D6956105BD0E739499BDB
-gpg2 --refresh-keys
+# Install rbenv
+git clone https://github.com/rbenv/rbenv.git "$RBENV_ROOT"
 
-# Trust the keys
-echo 409B6B1796C275462A1703113804BB82D39DC0E3:6: \
-    | gpg2 --import-ownertrust
-echo 7D2BAF1CF37B13E2069D6956105BD0E739499BDB:6: \
-    | gpg2 --import-ownertrust
+# Compile dynamic bash rbenv extension
+cd "$RBENV_ROOT" && src/configure && make -C src
 
-# Download the installer
-curl -s -o "$TMPDIR/rvm-installer" \
-    "https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer"
-curl -s -o "$TMPDIR/rvm-installer.asc" \
-    "https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installer.asc"
-
-# Verify the installer signature
-if ! gpg --verify "$TMPDIR/rvm-installer.asc" ; then
-    echo "Error validating rvm installer" >&2
-    false ; return
-fi
-
-# Install rvm
-# Installs RVM to ~/.rvm and hence no need for an rvm group
-# ( as opposed to /usr/share/rvm if installed via apt-get )
-# Configure the installer to not setup rvm in the dotfiles
-# ( would otherwise write to ~/.profile )
-export rvm_ignore_dotfiles=yes
-bash "$TMPDIR/rvm-installer" stable
+# Install ruby-build to get the `rbenv install` command
+[ ! -d "$RBENV_ROOT/plugins" ] && mkdir -p "$RBENV_ROOT/plugins" >/dev/null
+git clone https://github.com/rbenv/ruby-build.git \
+    "$RBENV_ROOT/plugins/ruby-build"

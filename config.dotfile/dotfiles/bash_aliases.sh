@@ -68,18 +68,18 @@ alias lsp='sudo lsof -i -n -P | grep LISTEN'
 
 # pyi [<distribution>] - install lastest version of distribution
 # defaults to CPython
-alias pyi="pyenv-wrapper install"
+alias pyi="xenv --command=pyenv install"
 
 # List all distributions available
-alias pyd="pyenv-wrapper --all distributions"
+alias pyd="xenv --command=pyenv --all distributions"
 
 # pyv [<distribution>] - list all versions of distribution
 # defaults to CPython
-alias pyv="pyenv-wrapper --all versions"
+alias pyv="xenv --command=pyenv --all versions"
 
 # pyl [<distribution>] - list latest installed version of distribution
 # defaults to CPython
-alias pyl="pyenv-wrapper --latest versions"
+alias pyl="xenv --command=pyenv --latest versions"
 
 # pipenv
 alias prp="pipenv run python"
@@ -88,4 +88,34 @@ alias pei='pipenv install --python `pyenv which python`'
 # Ruby
 #
 
+# rbi [<distribution>] - install lastest version of distribution
+# defaults to CRuby
+alias rbi="xenv --command=rbenv install"
+
+# List all distributions available
+alias rbd="xenv --command=rbenv --all distributions"
+
+# rbv [<distribution>] - list all versions of distribution
+# defaults to CRuby
+alias rbv="xenv --command=rbenv --all versions"
+
+# rbl [<distribution>] - list latest installed version of distribution
+# defaults to CRuby
+alias rbl="xenv --command=rbenv --latest versions"
+
 alias mux="tmuxinator"
+
+# NodeJS
+#
+
+# ndi [<distribution>] - install lastest version of distribution
+alias ndi="xenv --command=nodenv install"
+
+# List all distributions available
+alias ndd="xenv --command=nodenv --all distributions"
+
+# ndv [<distribution>] - list all versions of distribution
+alias ndv="xenv --command=nodenv --all versions"
+
+# ndl [<distribution>] - list latest installed version of distribution
+alias ndl="xenv --command=nodenv --latest versions"
