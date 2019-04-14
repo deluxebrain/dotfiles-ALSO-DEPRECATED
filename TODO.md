@@ -17,9 +17,9 @@
   - [X] test with docker-machine/compose
   - [X] install completions
   - [X] ONLY install completions
-  - [ ] update docker installs to use script
 - [ ] Get xenv under test ( mocking of e.g. pyenv )
 - [ ] Blogs
+  - /dev/matt device to static html
   - xenv
   - installation from github
     - extend script to allow version to be specified
@@ -56,6 +56,8 @@
   - [ ] wget check for file (  wget -S --spider --quiet  www.google.com 2>&1 | grep --quiet '200 OK' && echo here )
 
 TODAY
+- [ ] Update docker install to use github-get
+- [ ] Re-run in dotfiles and check log
 - [ ] Update all README's
 - [ ] Review all commits
 - [ ] Code review
